@@ -33,15 +33,19 @@ function HistoryPeriodSelector({
   });
 
   return (
-    <div className="flex flex-wrap items-center gap-4">
+    <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 sm:gap-4">
       <SkeletonWrapper isLoading={historyPeriods.isFetching} fullWidth={false}>
         <Tabs
           value={timeframe}
           onValueChange={(value) => setTimeframe(value as Timeframe)}
         >
           <TabsList>
-            <TabsTrigger value="year">Year</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
+            <TabsTrigger value="year" className="text-xs md:text-sm">
+              Year
+            </TabsTrigger>
+            <TabsTrigger value="month" className="text-xs md:text-sm">
+              Month
+            </TabsTrigger>
           </TabsList>
         </Tabs>
       </SkeletonWrapper>
@@ -87,7 +91,7 @@ function YearSelector({
         });
       }}
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[140px] md:w-[180px]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -118,7 +122,7 @@ function MonthSelector({
         });
       }}
     >
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[140px] md:w-[180px]">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

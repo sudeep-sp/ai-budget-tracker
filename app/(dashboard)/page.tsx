@@ -25,18 +25,23 @@ async function page() {
   return (
     <div className="h-full bg-background">
       <div className="border-b bg-card">
-        <div className="container mx-auto flex flex-wrap items-center justify-between gap-6 py-8 px-4 sm:px-6 lg:px-8">
+        <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-6 py-6 md:py-8 px-4 md:px-6 lg:px-8">
           <div>
-            <p className="text-3xl font-bold">Hello, {user.firstName}! 👋</p>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-2xl md:text-3xl font-bold">
+              Hello, {user.firstName}! 👋
+            </p>
+            <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
               Welcome to your budget tracker
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
             <CreateTransactionDialog
               trigger={
-                <Button className="border-emerald-500 bg-emerald-950 text-white hover:bg-emerald-700 hover:text-white border">
+                <Button
+                  className="border-emerald-500 bg-emerald-950 text-white hover:bg-emerald-700 hover:text-white border text-sm flex-1 sm:flex-none"
+                  size="sm"
+                >
                   New income 🤑
                 </Button>
               }
@@ -45,7 +50,10 @@ async function page() {
 
             <CreateTransactionDialog
               trigger={
-                <Button className="border-rose-500 bg-rose-950 text-white hover:bg-rose-700 hover:text-white border">
+                <Button
+                  className="border-rose-500 bg-rose-950 text-white hover:bg-rose-700 hover:text-white border text-sm flex-1 sm:flex-none"
+                  size="sm"
+                >
                   New expense 💸
                 </Button>
               }

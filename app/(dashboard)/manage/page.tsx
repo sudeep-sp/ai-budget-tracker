@@ -29,21 +29,21 @@ function page() {
   return (
     <>
       <div className="border-b bg-card">
-        <div className="container flex flex-wrap items-center justify-between gap-6 py-8 mx-auto">
+        <div className="container flex flex-wrap items-center justify-between gap-4 md:gap-6 py-6 md:py-8 mx-auto px-4 md:px-6">
           <div className="">
-            <p className="text-3xl font-bold">Manage</p>
-            <p className="text-muted-foreground">
+            <p className="text-2xl md:text-3xl font-bold">Manage</p>
+            <p className="text-muted-foreground text-sm md:text-base">
               Manage your account setting and categories
             </p>
           </div>
         </div>
       </div>
 
-      <div className="container flex flex-col gap-4 p-4 mx-auto">
+      <div className="container flex flex-col gap-4 p-4 md:p-6 mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>Currency</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-lg md:text-xl">Currency</CardTitle>
+            <CardDescription className="text-sm">
               set your default currency for transactions
             </CardDescription>
           </CardHeader>
@@ -74,18 +74,18 @@ function CategoryList({ type }: { type: TransactionType }) {
     <SkeletonWrapper isLoading={categoriesQuery.isLoading}>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-4">
+          <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               {type === "expense" ? (
-                <TrendingDownIcon className="h-12 w-12 items-center rounded-lg bg-red-400/10 p-2 text-red-500" />
+                <TrendingDownIcon className="h-10 w-10 md:h-12 md:w-12 items-center rounded-lg bg-red-400/10 p-2 text-red-500" />
               ) : (
-                <TrendingUpIcon className="h-12 w-12 items-center rounded-lg bg-emerald-400/10 p-2 text-emerald-500" />
+                <TrendingUpIcon className="h-10 w-10 md:h-12 md:w-12 items-center rounded-lg bg-emerald-400/10 p-2 text-emerald-500" />
               )}
               <div className="">
-                <h2 className="text-2xl font-bold">
+                <h2 className="text-lg md:text-2xl font-bold">
                   {type === "expense" ? "Expenses" : "Income"} categories
                 </h2>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-xs md:text-sm text-muted-foreground">
                   Sorted by name
                 </div>
               </div>
@@ -94,7 +94,7 @@ function CategoryList({ type }: { type: TransactionType }) {
               type={type}
               successCallback={() => categoriesQuery.refetch()}
               trigger={
-                <Button className="gap-2 text-sm">
+                <Button className="gap-2 text-sm w-full sm:w-auto" size="sm">
                   <PlusSquare className="h-4 w-4" />
                   Create new
                 </Button>
@@ -105,7 +105,7 @@ function CategoryList({ type }: { type: TransactionType }) {
         <Separator />
 
         {!dataAvailable && (
-          <div className="flex h-40 w-full flex-col items-center justify-center">
+          <div className="flex h-32 md:h-40 w-full flex-col items-center justify-center">
             <p className="text-sm text-muted-foreground">
               No{" "}
               <span
@@ -124,7 +124,7 @@ function CategoryList({ type }: { type: TransactionType }) {
           </div>
         )}
         {dataAvailable && (
-          <div className="grid grid-flow-row gap-2 p-2 sm:grid-flow-row sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-flow-row gap-2 p-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {categoriesQuery.data.map((category: Category) => (
               <CategoryCard key={category.name} category={category} />
             ))}
@@ -138,20 +138,23 @@ function CategoryList({ type }: { type: TransactionType }) {
 function CategoryCard({ category }: { category: Category }) {
   return (
     <div className="flex border-separate flex-col justify-between rounded-md border shadow-md shadow-black/[0.1] dark:shadow-white/[0.1]">
-      <div className="flex flex-col items-center gap-2 p-4">
-        <span className="text-3xl" role="img">
+      <div className="flex flex-col items-center gap-2 p-3 md:p-4">
+        <span className="text-2xl md:text-3xl" role="img">
           {category.icon}
         </span>
-        <h3 className="text-lg font-semibold">{category.name}</h3>
+        <h3 className="text-sm md:text-lg font-semibold text-center">
+          {category.name}
+        </h3>
       </div>
       <DeleteCategoryDialog
         category={category}
         trigger={
           <Button
-            className="flex w-full border-separate items-center gap-2 rounded-t-none text-muted-foreground hover:bg-red-500/20"
+            className="flex w-full border-separate items-center gap-2 rounded-t-none text-muted-foreground hover:bg-red-500/20 text-xs md:text-sm"
             variant={"secondary"}
+            size="sm"
           >
-            <TrashIcon className="h-4 w-4" />
+            <TrashIcon className="h-3 w-3 md:h-4 md:w-4" />
             Remove
           </Button>
         }

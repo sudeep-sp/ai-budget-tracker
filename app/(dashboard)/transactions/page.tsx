@@ -15,31 +15,35 @@ function TransactionsPage() {
   return (
     <>
       <div className="border-b bg-card">
-        <div className="container flex flex-wrap items-center justify-between gap-8 py-8 mx-auto">
+        <div className="container flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-6 py-6 md:py-8 mx-auto px-4 md:px-6">
           <div className="">
-            <p className="text-3xl font-bold">Transaction history</p>
+            <p className="text-2xl md:text-3xl font-bold">
+              Transaction history
+            </p>
           </div>
-          <DateRangePicker
-            initialDateFrom={dateRange.from}
-            initialDateTo={dateRange.to}
-            showCompare={false}
-            onUpdate={(values) => {
-              const { from, to } = values.range;
-              //we update the date only both date are set
-              if (!from || !to) return;
-              if (differenceInDays(to, from) > MAX_DATE_RANGE_DAYS) {
-                toast.error(
-                  `Date range cannot exceed ${MAX_DATE_RANGE_DAYS} days.`
-                );
-                return;
-              }
-              setDateRange({ from, to });
-            }}
-          />
+          <div className="w-full sm:w-auto">
+            <DateRangePicker
+              initialDateFrom={dateRange.from}
+              initialDateTo={dateRange.to}
+              showCompare={false}
+              onUpdate={(values) => {
+                const { from, to } = values.range;
+                //we update the date only both date are set
+                if (!from || !to) return;
+                if (differenceInDays(to, from) > MAX_DATE_RANGE_DAYS) {
+                  toast.error(
+                    `Date range cannot exceed ${MAX_DATE_RANGE_DAYS} days.`
+                  );
+                  return;
+                }
+                setDateRange({ from, to });
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto">
+      <div className="container mx-auto px-4 md:px-6">
         <TransactionTable from={dateRange.from} to={dateRange.to} />
       </div>
     </>

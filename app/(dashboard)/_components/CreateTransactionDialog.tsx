@@ -114,9 +114,9 @@ function CreateTransactionDialog({ trigger, type }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[500px] w-[95vw] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">
             Create a new{" "}
             <span
               className={cn(
@@ -136,12 +136,12 @@ function CreateTransactionDialog({ trigger, type }: Props) {
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel className="text-sm">Description</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Enter description" />
                   </FormControl>
-                  <FormDescription>
-                    Transaction description (optional)
+                  <FormDescription className="text-xs">
+                    Optional
                   </FormDescription>
                 </FormItem>
               )}
@@ -151,32 +151,37 @@ function CreateTransactionDialog({ trigger, type }: Props) {
               control={form.control}
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Amount</FormLabel>
+                  <FormLabel className="text-sm">Amount *</FormLabel>
                   <FormControl>
-                    <Input type="number" {...field} />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                    />
                   </FormControl>
-                  <FormDescription>
-                    Transaction amount (required)
+                  <FormDescription className="text-xs">
+                    Required
                   </FormDescription>
                 </FormItem>
               )}
             />
 
-            <div className="flex items-center justify-between gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 name="category"
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel className="text-sm">Category *</FormLabel>
                     <FormControl>
                       <CategoryPicker
                         type={type}
                         onChange={handleCategoryChange}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Select a category for this transaction
+                    <FormDescription className="text-xs">
+                      Select category
                     </FormDescription>
                   </FormItem>
                 )}
@@ -187,27 +192,27 @@ function CreateTransactionDialog({ trigger, type }: Props) {
                 control={form.control}
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Transaction date</FormLabel>
+                    <FormLabel className="text-sm">Date</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "w-[200px] pl-3 text-left font-normal",
+                              "w-full pl-3 text-left font-normal text-sm",
                               !field.value && "text-muted-foreground"
                             )}
                           >
                             {field.value ? (
-                              format(field.value, "PPP")
+                              format(field.value, "MMM dd, yyyy")
                             ) : (
-                              <span>Select a date</span>
+                              <span>Pick a date</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -218,8 +223,8 @@ function CreateTransactionDialog({ trigger, type }: Props) {
                         />
                       </PopoverContent>
                     </Popover>
-                    <FormDescription>
-                      Select the date for this transaction
+                    <FormDescription className="text-xs">
+                      Transaction date
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -228,11 +233,12 @@ function CreateTransactionDialog({ trigger, type }: Props) {
             </div>
           </form>
         </Form>
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <DialogClose asChild>
             <Button
               type="button"
-              variant={"secondary"}
+              variant={"outline"}
+              className="w-full sm:w-auto"
               onClick={() => {
                 form.reset();
               }}
@@ -240,9 +246,14 @@ function CreateTransactionDialog({ trigger, type }: Props) {
               Cancel
             </Button>
           </DialogClose>
-          <Button onClick={form.handleSubmit(onSubmit)} disabled={isPending}>
+          <Button
+            onClick={form.handleSubmit(onSubmit)}
+            disabled={isPending}
+            className="w-full sm:w-auto"
+          >
             {!isPending && "Create"}
-            {isPending && <Loader2 className="animate-spin" />}
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isPending && "Creating..."}
           </Button>
         </DialogFooter>
       </DialogContent>

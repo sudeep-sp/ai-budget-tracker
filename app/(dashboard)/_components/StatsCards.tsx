@@ -35,15 +35,15 @@ function StatsCards({ from, to, userSettings }: Props) {
   const balance = income - expense;
 
   return (
-    <div className="relative flex w-full flex-wrap gap-2 md:flex-nowrap">
+    <div className="relative flex w-full flex-wrap gap-4 lg:flex-nowrap">
       <SkeletonWrapper isLoading={statsQuery.isFetching}>
         <StatsCard
           formatter={formatter}
           value={income}
           title="Income"
           icon={
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-400/10">
-              <TrendingUp className="h-6 w-6 text-emerald-500" />
+            <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-emerald-400/10">
+              <TrendingUp className="h-4 w-4 md:h-6 md:w-6 text-emerald-500" />
             </div>
           }
         />
@@ -54,8 +54,8 @@ function StatsCards({ from, to, userSettings }: Props) {
           value={expense}
           title="Expense"
           icon={
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-400/10">
-              <TrendingDown className="h-6 w-6 text-red-500" />
+            <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-red-400/10">
+              <TrendingDown className="h-4 w-4 md:h-6 md:w-6 text-red-500" />
             </div>
           }
         />
@@ -66,8 +66,8 @@ function StatsCards({ from, to, userSettings }: Props) {
           value={balance}
           title="Balance"
           icon={
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-400/10">
-              <Wallet className="h-6 w-6 text-violet-500" />
+            <div className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg bg-violet-400/10">
+              <Wallet className="h-4 w-4 md:h-6 md:w-6 text-violet-500" />
             </div>
           }
         />
@@ -97,17 +97,19 @@ function StatsCard({
   );
 
   return (
-    <Card className="flex h-24 w-full flex-row items-center p-4">
-      <div className="mr-4">{icon}</div>
-      <div className="flex flex-col justify-center">
-        <p className="text-sm text-muted-foreground">{title}</p>
+    <Card className="flex h-20 md:h-24 w-full flex-row items-center p-3 md:p-4">
+      <div className="mr-3 md:mr-4">{icon}</div>
+      <div className="flex flex-col justify-center min-w-0 flex-1">
+        <p className="text-xs md:text-sm text-muted-foreground truncate">
+          {title}
+        </p>
         <Countup
           preserveValue
           redraw={false}
           end={value}
           decimals={2}
           formattingFn={formatfn}
-          className="text-xl font-semibold"
+          className="text-lg md:text-xl font-semibold truncate"
         />
       </div>
     </Card>

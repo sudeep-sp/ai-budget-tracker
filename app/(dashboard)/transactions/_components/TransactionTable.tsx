@@ -60,9 +60,13 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
       return value.includes(row.getValue(id));
     },
     cell: ({ row }) => (
-      <div className="flex gap-2 capitalize">
-        {row.original.categoryIcon}
-        <div className="capitalize">{row.original.category}</div>
+      <div className="flex gap-1 md:gap-2 capitalize items-center min-w-0">
+        <span className="text-base md:text-lg">
+          {row.original.categoryIcon}
+        </span>
+        <div className="capitalize text-xs md:text-sm truncate">
+          {row.original.category}
+        </div>
       </div>
     ),
   },
@@ -72,7 +76,9 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
       <DataTableColumnHeader column={column} title="Description" />
     ),
     cell: ({ row }) => (
-      <div className="capitalize">{row.original.description}</div>
+      <div className="capitalize text-xs md:text-sm truncate max-w-32 md:max-w-none">
+        {row.original.description}
+      </div>
     ),
   },
   {
@@ -88,7 +94,11 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
         month: "2-digit",
         day: "2-digit",
       });
-      return <div className="text-muted-foreground">{formattedDate}</div>;
+      return (
+        <div className="text-muted-foreground text-xs md:text-sm whitespace-nowrap">
+          {formattedDate}
+        </div>
+      );
     },
   },
   {
@@ -102,7 +112,7 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
     cell: ({ row }) => (
       <div
         className={cn(
-          "capitalize rounded-lg text-center p-2",
+          "capitalize rounded-lg text-center p-1 md:p-2 text-xs md:text-sm whitespace-nowrap",
           row.original.type === "income" &&
             "bg-emerald-400/10 text-emerald-500",
           row.original.type === "expense" && "bg-red-400/10 text-red-500"
@@ -118,7 +128,7 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
       <DataTableColumnHeader column={column} title="Amount" />
     ),
     cell: ({ row }) => (
-      <p className="text-md rounded-lg bg-gray-400/5 p-2 text-center font-medium">
+      <p className="text-xs md:text-sm rounded-lg bg-gray-400/5 p-1 md:p-2 text-center font-medium whitespace-nowrap">
         {row.original.formattedAmount}
       </p>
     ),
@@ -186,59 +196,68 @@ function TransactionTable({ from, to }: Props) {
 
   return (
     <div className="w-full">
-      <div className="flex flex-wrap items-end justify-between gap-2 py-4">
-        <div className="flex gap-2">
-          {table.getColumn("category") && (
-            <DataTableFacetedFilter
-              title="Category"
-              column={table.getColumn("category")}
-              options={categoriesOptions}
-            />
-          )}
-          {table.getColumn("type") && (
-            <DataTableFacetedFilter
-              title="Type"
-              column={table.getColumn("type")}
-              options={[
-                { value: "income", label: "Income" },
-                { value: "expense", label: "Expense" },
-              ]}
-            />
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            variant={"outline"}
-            size={"sm"}
-            className="ml-auto h-8 lg:flex"
-            onClick={() => {
-              const data = table.getFilteredRowModel().rows.map((row) => ({
-                category: row.original.category,
-                categoryIcon: row.original.categoryIcon,
-                description: row.original.description,
-                type: row.original.type,
-                amount: row.original.amount,
-                formattedAmount: row.original.formattedAmount,
-                date: row.original.date,
-              }));
-              handleExportCSV(data);
-            }}
-          >
-            <DownloadIcon className="mr-2 h-4 w-4" />
-            Export CSV
-          </Button>
-          <DataTableViewOptions table={table} />
+      <div className="flex flex-col gap-3 py-4">
+        {/* Mobile: Stack vertically, Desktop: Two columns */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          {/* Left side: Category and Type filters */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            {table.getColumn("category") && (
+              <DataTableFacetedFilter
+                title="Category"
+                column={table.getColumn("category")}
+                options={categoriesOptions}
+              />
+            )}
+            {table.getColumn("type") && (
+              <DataTableFacetedFilter
+                title="Type"
+                column={table.getColumn("type")}
+                options={[
+                  { value: "income", label: "Income" },
+                  { value: "expense", label: "Expense" },
+                ]}
+              />
+            )}
+          </div>
+
+          {/* Right side: Export CSV and Column toggle */}
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <Button
+              variant={"outline"}
+              size={"sm"}
+              className="h-8 text-xs"
+              onClick={() => {
+                const data = table.getFilteredRowModel().rows.map((row) => ({
+                  category: row.original.category,
+                  categoryIcon: row.original.categoryIcon,
+                  description: row.original.description,
+                  type: row.original.type,
+                  amount: row.original.amount,
+                  formattedAmount: row.original.formattedAmount,
+                  date: row.original.date,
+                }));
+                handleExportCSV(data);
+              }}
+            >
+              <DownloadIcon className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+            <DataTableViewOptions table={table} />
+          </div>
         </div>
       </div>
       <SkeletonWrapper isLoading={history.isFetching}>
-        <div className="overflow-hidden rounded-md border ">
+        <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead
+                        key={header.id}
+                        className="text-xs md:text-sm whitespace-nowrap"
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -259,7 +278,7 @@ function TransactionTable({ from, to }: Props) {
                     data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell key={cell.id} className="text-xs md:text-sm">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext()
@@ -272,7 +291,7 @@ function TransactionTable({ from, to }: Props) {
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className="h-24 text-center"
+                    className="h-20 md:h-24 text-center text-sm"
                   >
                     No results.
                   </TableCell>
@@ -281,12 +300,13 @@ function TransactionTable({ from, to }: Props) {
             </TableBody>
           </Table>
         </div>
-        <div className="flex items-center justify-end space-x-2 py-4">
+        <div className="flex items-center justify-center sm:justify-end space-x-2 py-4">
           <Button
             variant="outline"
             size="sm"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
+            className="text-xs"
           >
             Previous
           </Button>
@@ -295,6 +315,7 @@ function TransactionTable({ from, to }: Props) {
             size="sm"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
+            className="text-xs"
           >
             Next
           </Button>

@@ -45,11 +45,11 @@ function History({ userSettings }: { userSettings: UserSettings }) {
     historyDataQuery.data && historyDataQuery.data.length > 0;
 
   return (
-    <div className="container mx-auto">
-      <h2 className="mt-12 text-3xl font-bold">History</h2>
+    <div className="container mx-auto px-4">
+      <h2 className="mt-8 md:mt-12 text-2xl md:text-3xl font-bold">History</h2>
       <Card className="col-span-12 mt-2 w-full">
-        <CardHeader className="gap-2">
-          <CardTitle className="grid grid-flow-row justify-between gap-2 md:grid-flow-col">
+        <CardHeader className="gap-2 p-4 md:p-6">
+          <CardTitle className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
             <HistoryPeriodSelector
               period={period}
               setPeriod={setPeriod}
@@ -57,25 +57,25 @@ function History({ userSettings }: { userSettings: UserSettings }) {
               setTimeframe={setTimeframe}
             />
 
-            <div className="flex h-10 gap-2">
+            <div className="flex h-10 gap-2 flex-wrap">
               <Badge
                 variant={"outline"}
-                className="flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 text-xs md:text-sm"
               >
-                <div className="h-4 w-4 rounded-full bg-emerald-500"></div>
+                <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-emerald-500"></div>
                 income
               </Badge>
               <Badge
                 variant={"outline"}
-                className="flex items-center gap-2 text-sm"
+                className="flex items-center gap-2 text-xs md:text-sm"
               >
-                <div className="h-4 w-4 rounded-full bg-red-500"></div>
+                <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-red-500"></div>
                 expense
               </Badge>
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 md:p-6">
           <SkeletonWrapper isLoading={historyDataQuery.isFetching}>
             {dataAvailable && (
               <ResponsiveContainer width={"100%"} height={300}>
@@ -110,7 +110,7 @@ function History({ userSettings }: { userSettings: UserSettings }) {
                   />
                   <XAxis
                     stroke="#888888"
-                    fontSize={12}
+                    fontSize={10}
                     tickLine={false}
                     axisLine={false}
                     padding={{ left: 5, right: 5 }}
@@ -119,7 +119,7 @@ function History({ userSettings }: { userSettings: UserSettings }) {
                       const date = new Date(year, month, day || 1);
                       if (timeframe === "year") {
                         return date.toLocaleDateString("default", {
-                          month: "long",
+                          month: "short",
                         });
                       }
                       return date.toLocaleDateString("default", {
@@ -129,7 +129,7 @@ function History({ userSettings }: { userSettings: UserSettings }) {
                   />
                   <YAxis
                     stroke="#888888"
-                    fontSize={12}
+                    fontSize={10}
                     tickLine={false}
                     axisLine={false}
                   />
@@ -158,8 +158,10 @@ function History({ userSettings }: { userSettings: UserSettings }) {
             )}
             {!dataAvailable && (
               <Card className="flex h-[300px] flex-col items-center justify-center bg-background">
-                No data for the selected period
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm md:text-base">
+                  No data for the selected period
+                </p>
+                <p className="text-xs md:text-sm text-muted-foreground text-center mt-2">
                   Try adjusting the filters or adding new data.
                 </p>
               </Card>
@@ -183,7 +185,7 @@ function CustomTooltip({ active, payload, formatter }: any) {
   const balance = income - expense;
 
   return (
-    <div className="min-w-[300px] rounded border bg-background p-4">
+    <div className="min-w-[200px] md:min-w-[300px] rounded border bg-background p-3 md:p-4">
       <TooltipRow
         formatter={formatter}
         label="Income"
@@ -230,17 +232,17 @@ function TooltipRow({
   );
   return (
     <div className="flex items-center gap-2">
-      <div className={cn("h-4 w-4 rounded-full", bgColor)} />
-      <div className="flex w-full justify-between">
-        <p className="text-sm text-muted-foreground">{label}</p>
-        <div className={cn("text-sm font-bold", textColor)}>
+      <div className={cn("h-3 w-3 md:h-4 md:w-4 rounded-full", bgColor)} />
+      <div className="flex w-full justify-between items-center">
+        <p className="text-xs md:text-sm text-muted-foreground">{label}</p>
+        <div className={cn("text-xs md:text-sm font-bold", textColor)}>
           <CountUp
             duration={0.5}
             preserveValue
             end={value}
             decimals={0}
             formattingFn={formattingFn}
-            className="text-sm"
+            className="text-xs md:text-sm"
           />
         </div>
       </div>
