@@ -45,8 +45,24 @@ export function calculateSplits(
  * Calculate net balances between users in a group
  */
 export function calculateBalances(
-    expenses: any[],
-    payments: any[],
+    expenses: Array<{
+        id: string;
+        description: string;
+        amount: number;
+        date: Date;
+        paidBy: string;
+        splits?: Array<{
+            id: string;
+            userId: string;
+            amount: number;
+            isPaid: boolean;
+        }>;
+    }>,
+    payments: Array<{
+        id: string;
+        splitId: string;
+        amount: number;
+    }>,
     members: { userId: string; name: string; email: string }[]
 ): UserBalance[] {
     const balances: { [userId: string]: UserBalance } = {};
@@ -64,9 +80,9 @@ export function calculateBalances(
         };
     });
 
-    // Calculate what each person owes from expenses
+        // Calculate what each person owes from expenses
     expenses.forEach(expense => {
-        expense.splits?.forEach((split: any) => {
+        expense.splits?.forEach((split) => {
             if (balances[split.userId]) {
                 balances[split.userId].totalOwed += split.amount;
                 balances[split.userId].transactions.push({
@@ -82,8 +98,8 @@ export function calculateBalances(
         // The person who paid is owed money by others
         if (balances[expense.paidBy]) {
             const othersOwed = expense.splits
-                ?.filter((split: any) => split.userId !== expense.paidBy)
-                ?.reduce((sum: number, split: any) => sum + split.amount, 0) || 0;
+                ?.filter((split) => split.userId !== expense.paidBy)
+                ?.reduce((sum: number, split) => sum + split.amount, 0) || 0;
 
             balances[expense.paidBy].totalOwing += othersOwed;
         }
@@ -92,15 +108,13 @@ export function calculateBalances(
     // Subtract payments made
     payments.forEach(payment => {
         const split = expenses
-            .flatMap(e => e.splits)
-            .find(s => s.id === payment.splitId);
+            .flatMap(e => e.splits || [])
+            .find(s => s?.id === payment.splitId);
 
         if (split && balances[split.userId]) {
             balances[split.userId].totalOwed -= payment.amount;
         }
-    });
-
-    // Calculate net balances
+    });    // Calculate net balances
     Object.values(balances).forEach(balance => {
         balance.netBalance = balance.totalOwing - balance.totalOwed;
     });
@@ -157,7 +171,22 @@ export function generateSettlementSuggestions(
 /**
  * Calculate group statistics
  */
-export function calculateGroupStats(expenses: any[], members: any[]) {
+export function calculateGroupStats(
+    expenses: Array<{
+        id: string;
+        amount: number;
+        category: string;
+        paidBy: string;
+        splits?: Array<{
+            userId: string;
+            amount: number;
+        }>;
+    }>, 
+    members: Array<{
+        userId: string;
+        isActive: boolean;
+    }>
+) {
     const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const totalTransactions = expenses.length;
     const avgExpenseAmount = totalTransactions > 0 ? totalExpenses / totalTransactions : 0;
@@ -177,7 +206,7 @@ export function calculateGroupStats(expenses: any[], members: any[]) {
             memberContributions[expense.paidBy].paid += expense.amount;
         }
 
-        expense.splits?.forEach((split: any) => {
+        expense.splits?.forEach((split) => {
             if (memberContributions[split.userId]) {
                 memberContributions[split.userId].owes += split.amount;
             }
@@ -235,12 +264,19 @@ export function hasPermission(userRole: string, userPermissions: string[], requi
  * Generate recurring expense instances
  */
 export function generateRecurringInstances(
-    baseExpense: any,
-    recurringConfig: any,
+    baseExpense: {
+        date: Date;
+    },
+    recurringConfig: {
+        endDate?: Date;
+        maxOccurrences?: number;
+        frequency: 'daily' | 'weekly' | 'monthly' | 'yearly';
+        interval: number;
+    },
     maxInstances: number = 12
 ): Date[] {
     const instances: Date[] = [];
-    let currentDate = new Date(baseExpense.date);
+    const currentDate = new Date(baseExpense.date);
 
     for (let i = 0; i < maxInstances; i++) {
         if (recurringConfig.endDate && currentDate > new Date(recurringConfig.endDate)) {
