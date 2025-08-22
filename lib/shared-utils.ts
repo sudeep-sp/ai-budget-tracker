@@ -80,7 +80,7 @@ export function calculateBalances(
         };
     });
 
-        // Calculate what each person owes from expenses
+    // Calculate what each person owes from expenses
     expenses.forEach(expense => {
         expense.splits?.forEach((split) => {
             if (balances[split.userId]) {
@@ -181,7 +181,7 @@ export function calculateGroupStats(
             userId: string;
             amount: number;
         }>;
-    }>, 
+    }>,
     members: Array<{
         userId: string;
         isActive: boolean;

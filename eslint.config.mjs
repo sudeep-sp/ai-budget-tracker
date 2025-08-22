@@ -16,8 +16,8 @@ const eslintConfig = [
       "lib/generated/prisma/**",
       "node_modules/**",
       ".next/**",
-      "out/**"
-    ]
+      "out/**",
+    ],
   },
   {
     rules: {
@@ -26,9 +26,9 @@ const eslintConfig = [
       "@typescript-eslint/no-require-imports": "warn",
       "@typescript-eslint/no-this-alias": "warn",
       "@typescript-eslint/no-unused-expressions": "warn",
-      "prefer-const": "warn"
-    }
-  }
+      "prefer-const": "warn",
+    },
+  },
 ];
 
 export default eslintConfig;
