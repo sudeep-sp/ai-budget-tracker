@@ -52,6 +52,7 @@ interface Props {
 
 function CreateCategoryDialog({ type, successCallback, trigger }: Props) {
   const [open, setOpen] = React.useState(false);
+  const [emojiPickerOpen, setEmojiPickerOpen] = React.useState(false);
   const form = useForm<CreateCategorySchemaType>({
     resolver: zodResolver(CreateCategorySchema),
     defaultValues: {
@@ -159,44 +160,62 @@ function CreateCategoryDialog({ type, successCallback, trigger }: Props) {
                 <FormItem>
                   <FormLabel>Icon</FormLabel>
                   <FormControl>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className="h-[100px] w-full"
-                        >
-                          {form.watch("icon") ? (
-                            <div className="flex flex-col items-center gap-2">
-                              <span className="text-5xl" role="img">
-                                {field.value}
-                              </span>
-                              <p className="text-xs text-muted-foreground">
-                                Click to change
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center gap-2">
-                              <CircleOff className="h-[48px] w-[48px]" />
-                              <p className="text-xs text-muted-foreground">
-                                Click to select
-                              </p>
-                            </div>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full">
-                        <EmojiPicker
-                          theme={theme.resolvedTheme as any}
-                          onEmojiClick={(emojiData) => {
-                            field.onChange(emojiData.emoji);
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <Button
+                      type="button"
+                      variant={"outline"}
+                      className="h-[100px] w-full"
+                      onClick={() => setEmojiPickerOpen(true)}
+                    >
+                      {form.watch("icon") ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <span className="text-5xl" role="img">
+                            {field.value}
+                          </span>
+                          <p className="text-xs text-muted-foreground">
+                            Click to change
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <CircleOff className="h-[48px] w-[48px]" />
+                          <p className="text-xs text-muted-foreground">
+                            Click to select
+                          </p>
+                        </div>
+                      )}
+                    </Button>
                   </FormControl>
                   <FormDescription>
                     This is how your category will appear in the app
                   </FormDescription>
+
+                  {/* Emoji Picker Dialog */}
+                  <Dialog
+                    open={emojiPickerOpen}
+                    onOpenChange={setEmojiPickerOpen}
+                  >
+                    <DialogContent className="max-w-md p-0">
+                      <DialogHeader className="p-4 pb-2">
+                        <DialogTitle>Choose an Emoji</DialogTitle>
+                      </DialogHeader>
+                      <div className="p-4 pt-0">
+                        <EmojiPicker
+                          onEmojiClick={(emojiObject) => {
+                            field.onChange(emojiObject.emoji);
+                            setEmojiPickerOpen(false);
+                          }}
+                          theme={theme.resolvedTheme as any}
+                          searchDisabled={false}
+                          skinTonesDisabled={false}
+                          previewConfig={{
+                            showPreview: false,
+                          }}
+                          width="100%"
+                          height={350}
+                        />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </FormItem>
               )}
             />
