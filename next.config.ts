@@ -12,9 +12,15 @@ const nextConfig: NextConfig = {
       config.externals.push({
         '@prisma/client': 'commonjs @prisma/client',
       });
+      // Ensure the Prisma binaries are copied
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
     }
     return config;
   },
+  output: 'standalone',
 };
 
 export default nextConfig;

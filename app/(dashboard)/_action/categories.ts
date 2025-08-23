@@ -31,6 +31,7 @@ export async function CreateCategory(form: CreateCategorySchemaType) {
 export async function DeleteCategory(form: DeleteCategorySchemaType) {
     const parsedBody = DeleteCategorySchema.safeParse(form);
     if (!parsedBody.success) {
+        console.error("DeleteCategory validation error:", parsedBody.error);
         throw new Error("bad request");
     }
 
@@ -39,13 +40,27 @@ export async function DeleteCategory(form: DeleteCategorySchemaType) {
         redirect("/sign-in");
     }
 
-    return await prisma.category.delete({
-        where: {
-            name_userId_type: {
-                userId: user.id,
-                name: parsedBody.data.name,
-                type: parsedBody.data.type
+    try {
+        console.log("Attempting to delete category:", {
+            userId: user.id,
+            name: parsedBody.data.name,
+            type: parsedBody.data.type
+        });
+        
+        const result = await prisma.category.delete({
+            where: {
+                name_userId_type: {
+                    userId: user.id,
+                    name: parsedBody.data.name,
+                    type: parsedBody.data.type
+                }
             }
-        }
-    })
+        });
+        
+        console.log("Category deleted successfully:", result);
+        return result;
+    } catch (error) {
+        console.error("Category deletion error:", error);
+        throw error;
+    }
 }
