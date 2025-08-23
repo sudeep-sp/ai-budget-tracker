@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+// @ts-ignore
+import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -6,21 +8,12 @@ const nextConfig: NextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  serverExternalPackages: ['@prisma/client', 'prisma'],
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals.push({
-        '@prisma/client': 'commonjs @prisma/client',
-      });
-      // Ensure the Prisma binaries are copied
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-      };
+      config.plugins = [...config.plugins, new PrismaPlugin()];
     }
     return config;
   },
-  output: 'standalone',
 };
 
 export default nextConfig;

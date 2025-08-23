@@ -70,6 +70,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@prisma/nextjs-monorepo-workaround-plugin": "^6.14.0",
     "@tailwindcss/postcss": "^4",
     "@tanstack/react-query-devtools": "^5.85.3",
     "@types/node": "^20",

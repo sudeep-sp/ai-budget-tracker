@@ -5,6 +5,9 @@ import { NextRequest } from "next/server";
 import { CreateSharedExpenseSchema, validateSplits } from "@/schema/shared-expenses";
 import { calculateSplits, hasPermission } from "@/lib/shared-utils";
 
+export const runtime = 'nodejs';
+
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ groupId: string }> }

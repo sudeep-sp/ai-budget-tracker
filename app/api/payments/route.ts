@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { RecordPaymentSchema } from "@/schema/shared-expenses";
 
+export const runtime = 'nodejs';
+
+
 export async function POST(request: NextRequest) {
     const user = await currentUser();
     if (!user) {

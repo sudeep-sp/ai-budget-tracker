@@ -5,6 +5,9 @@ import { getDaysInMonth } from "date-fns";
 import { redirect } from "next/navigation";
 import z from "zod/v3";
 
+export const runtime = 'nodejs';
+
+
 
 const getHistoryDataSchema = z.object({
     timeframe: z.enum(["year", "month"]),

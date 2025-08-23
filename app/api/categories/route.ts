@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import z from "zod";
 
+export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
     const user = await currentUser();

@@ -6,6 +6,9 @@ import { NextRequest } from "next/server";
 import { InviteMemberSchema } from "@/schema/shared-expenses";
 import { generateInvitationToken, hasPermission } from "@/lib/shared-utils";
 
+export const runtime = 'nodejs';
+
+
 const clerk = createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY });
 
 export async function GET(

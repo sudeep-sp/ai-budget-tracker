@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { calculateBalances, generateSettlementSuggestions } from "@/lib/shared-utils";
 
+export const runtime = 'nodejs';
+
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ groupId: string }> }

@@ -5,6 +5,9 @@ import { NextRequest } from "next/server";
 import { CreateGroupSchema, InviteMemberSchema } from "@/schema/shared-expenses";
 import { generateInvitationToken } from "@/lib/shared-utils";
 
+export const runtime = 'nodejs';
+
+
 export async function GET(request: NextRequest) {
     const user = await currentUser();
     if (!user) {

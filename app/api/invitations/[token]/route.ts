@@ -3,6 +3,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 
+export const runtime = 'nodejs';
+
+
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ token: string }> }
