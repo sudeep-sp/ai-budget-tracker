@@ -1,0 +1,4 @@
+# Don't ignore prisma generated files
+!lib/generated/prisma/**
+!node_modules/.prisma/**
+!node_modules/@prisma/**
