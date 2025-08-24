@@ -87,200 +87,220 @@ export default function GroupPage({ params }: GroupPageProps) {
   }
 
   return (
-    <div className="container mx-auto p-3 sm:p-4 lg:p-6 space-y-4 lg:space-y-6 max-w-7xl min-h-screen">
-      <SkeletonWrapper isLoading={groupQuery.isFetching}>
+    <div className="container mx-auto p-2 sm:p-4 lg:p-6 space-y-3 sm:space-y-4 lg:space-y-6 max-w-7xl min-h-screen">
+      {/* Header */}
+      <div className="space-y-3 lg:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <Link href="/shared">
+            <Button variant="outline" size="sm" className="w-fit">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          <div className="flex gap-2 w-full sm:w-auto justify-end sm:justify-start">
+            <Link
+              href={`/shared/${groupId}/add-expense`}
+              className="flex-1 sm:flex-initial"
+            >
+              <Button size="sm" className="gap-2 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                <span className="sm:hidden">Add</span>
+                <span className="hidden sm:inline">Add Expense</span>
+              </Button>
+            </Link>
+            <Link href={`/shared/${groupId}/manage`}>
+              <Button variant="outline" size="sm" className="px-3">
+                <Settings className="h-4 w-4" />
+                <span className="sr-only">Settings</span>
+              </Button>
+            </Link>
+          </div>
+        </div>
+        <SkeletonWrapper isLoading={groupQuery.isFetching}>
+          {group && (
+            <div className="space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
+                  {group.name}
+                </h1>
+                <Badge variant="outline" className="w-fit">
+                  {group.members?.find(
+                    (m: any) => m.userId === group.members[0]?.userId
+                  )?.role || "member"}
+                </Badge>
+              </div>
+              {group.description && (
+                <p className="text-muted-foreground text-sm lg:text-base line-clamp-2">
+                  {group.description}
+                </p>
+              )}
+            </div>
+          )}
+        </SkeletonWrapper>
+      </div>
+
+      {/* Quick Stats */}
+      <SkeletonWrapper
+        isLoading={groupQuery.isFetching || balancesQuery.isFetching}
+      >
         {group && (
-          <>
-            {/* Header */}
-            <div className="space-y-3 lg:space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
-                <Link href="/shared">
-                  <Button variant="outline" size="sm" className="w-fit">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back
-                  </Button>
-                </Link>
-                <div className="flex gap-2 w-full sm:w-auto justify-end sm:justify-start">
-                  <Link
-                    href={`/shared/${groupId}/add-expense`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <Button size="sm" className="gap-2 w-full sm:w-auto">
-                      <Plus className="h-4 w-4" />
-                      <span className="sm:hidden">Add</span>
-                      <span className="hidden sm:inline">Add Expense</span>
-                    </Button>
-                  </Link>
-                  <Link href={`/shared/${groupId}/manage`}>
-                    <Button variant="outline" size="sm" className="px-3">
-                      <Settings className="h-4 w-4" />
-                      <span className="sr-only">Settings</span>
-                    </Button>
-                  </Link>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <Users className="h-4 w-4 lg:h-5 lg:w-5 text-blue-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      Members
+                    </p>
+                    <p className="text-lg lg:text-2xl font-bold truncate">
+                      {group._count?.members || 0}
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold truncate">
-                    {group.name}
-                  </h1>
-                  <Badge variant="outline" className="w-fit">
-                    {group.members?.find(
-                      (m: any) => m.userId === group.members[0]?.userId
-                    )?.role || "member"}
-                  </Badge>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <Receipt className="h-4 w-4 lg:h-5 lg:w-5 text-green-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs lg:text-sm font-medium text-muted-foreground">
+                      Total Expenses
+                    </p>
+                    <p className="text-sm lg:text-2xl font-bold truncate">
+                      {formatCurrency(
+                        group.expenses?.reduce(
+                          (sum: number, expense: any) => sum + expense.amount,
+                          0
+                        ) || 0,
+                        group.currency
+                      )}
+                    </p>
+                  </div>
                 </div>
-                {group.description && (
-                  <p className="text-muted-foreground text-sm lg:text-base line-clamp-2">
-                    {group.description}
-                  </p>
-                )}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-              <Card className="hover:shadow-sm transition-shadow">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 lg:gap-3">
-                    <Users className="h-4 w-4 lg:h-5 lg:w-5 text-blue-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs lg:text-sm font-medium text-muted-foreground">
-                        Members
-                      </p>
-                      <p className="text-lg lg:text-2xl font-bold truncate">
-                        {group._count?.members || 0}
-                      </p>
-                    </div>
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5 text-red-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs lg:text-sm font-medium text-red-700">
+                      You Owe
+                    </p>
+                    <p className="text-sm lg:text-2xl font-bold text-red-600 truncate">
+                      {currentUserBalance
+                        ? formatCurrency(
+                            currentUserBalance.totalOwed,
+                            group.currency
+                          )
+                        : "€0.00"}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card className="hover:shadow-sm transition-shadow">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 lg:gap-3">
-                    <Receipt className="h-4 w-4 lg:h-5 lg:w-5 text-green-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs lg:text-sm font-medium text-muted-foreground">
-                        Total Expenses
-                      </p>
-                      <p className="text-sm lg:text-2xl font-bold truncate">
-                        {formatCurrency(
-                          group.expenses?.reduce(
-                            (sum: number, expense: any) => sum + expense.amount,
-                            0
-                          ) || 0,
-                          group.currency
-                        )}
-                      </p>
-                    </div>
+            <Card className="hover:shadow-sm transition-shadow">
+              <CardContent className="p-2 sm:p-4 lg:p-6">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-green-500 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-xs lg:text-sm font-medium text-green-700">
+                      You&apos;re Owed
+                    </p>
+                    <p className="text-sm lg:text-2xl font-bold text-green-600 truncate">
+                      {currentUserBalance
+                        ? formatCurrency(
+                            currentUserBalance.totalOwing,
+                            group.currency
+                          )
+                        : "€0.00"}
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </SkeletonWrapper>
 
-              <Card className="hover:shadow-sm transition-shadow">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 lg:gap-3">
-                    <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5 text-red-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs lg:text-sm font-medium text-red-700">
-                        You Owe
-                      </p>
-                      <p className="text-sm lg:text-2xl font-bold text-red-600 truncate">
-                        {currentUserBalance
-                          ? formatCurrency(
-                              currentUserBalance.totalOwed,
-                              group.currency
-                            )
-                          : "€0.00"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      {/* Main Content Tabs */}
+      <SkeletonWrapper
+        isLoading={groupQuery.isFetching || balancesQuery.isFetching}
+      >
+        {group && (
+          <Tabs defaultValue="overview" className="space-y-4 lg:space-y-6">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+              <TabsTrigger
+                value="overview"
+                className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <span className="sm:hidden">Info</span>
+                <span className="hidden sm:inline">Overview</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="expenses"
+                className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                Expenses
+              </TabsTrigger>
+              <TabsTrigger
+                value="balances"
+                className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                Balances
+              </TabsTrigger>
+              <TabsTrigger
+                value="members"
+                className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                Members
+              </TabsTrigger>
+            </TabsList>
 
-              <Card className="hover:shadow-sm transition-shadow">
-                <CardContent className="p-3 sm:p-4 lg:p-6">
-                  <div className="flex items-center gap-2 lg:gap-3">
-                    <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-green-500 flex-shrink-0" />
-                    <div className="min-w-0">
-                      <p className="text-xs lg:text-sm font-medium text-green-700">
-                        You&apos;re Owed
-                      </p>
-                      <p className="text-sm lg:text-2xl font-bold text-green-600 truncate">
-                        {currentUserBalance
-                          ? formatCurrency(
-                              currentUserBalance.totalOwing,
-                              group.currency
-                            )
-                          : "€0.00"}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Main Content Tabs */}
-            <Tabs defaultValue="overview" className="space-y-4 lg:space-y-6">
-              <TabsList className="grid w-full grid-cols-4 h-auto p-1">
-                <TabsTrigger
-                  value="overview"
-                  className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  <span className="sm:hidden">Info</span>
-                  <span className="hidden sm:inline">Overview</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="expenses"
-                  className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  Expenses
-                </TabsTrigger>
-                <TabsTrigger
-                  value="balances"
-                  className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  Balances
-                </TabsTrigger>
-                <TabsTrigger
-                  value="members"
-                  className="text-xs sm:text-sm px-2 py-2 sm:px-3 sm:py-2.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  Members
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="space-y-4 lg:space-y-6">
+            <TabsContent value="overview" className="space-y-4 lg:space-y-6">
+              <SkeletonWrapper
+                isLoading={groupQuery.isFetching || balancesQuery.isFetching}
+              >
                 <GroupSummaryWidget
                   group={group}
                   balances={balances}
                   expenses={group.expenses || []}
                 />
-              </TabsContent>
+              </SkeletonWrapper>
+            </TabsContent>
 
-              <TabsContent value="expenses" className="space-y-4 lg:space-y-6">
+            <TabsContent value="expenses" className="space-y-4 lg:space-y-6">
+              <SkeletonWrapper isLoading={groupQuery.isFetching}>
                 <ExpensesList
                   expenses={group.expenses || []}
                   members={group.members || []}
                   currency={group.currency}
                   groupId={groupId}
                 />
-              </TabsContent>
+              </SkeletonWrapper>
+            </TabsContent>
 
-              <TabsContent value="balances" className="space-y-4 lg:space-y-6">
+            <TabsContent value="balances" className="space-y-4 lg:space-y-6">
+              <SkeletonWrapper isLoading={balancesQuery.isFetching}>
                 <BalancesList balances={balances} currency={group.currency} />
-              </TabsContent>
+              </SkeletonWrapper>
+            </TabsContent>
 
-              <TabsContent value="members" className="space-y-4 lg:space-y-6">
+            <TabsContent value="members" className="space-y-4 lg:space-y-6">
+              <SkeletonWrapper isLoading={groupQuery.isFetching}>
                 <MembersList
                   members={group.members || []}
                   groupId={groupId}
                   groupName={group.name}
                 />
-              </TabsContent>
-            </Tabs>
-          </>
+              </SkeletonWrapper>
+            </TabsContent>
+          </Tabs>
         )}
       </SkeletonWrapper>
     </div>
@@ -333,16 +353,16 @@ function ExpensesList({
     <div className="space-y-4 lg:space-y-6">
       {/* Summary Stats */}
       <Card className="bg-muted/30">
-        <CardContent className="p-4 lg:p-6">
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 text-center">
+        <CardContent className="p-5 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-2 gap-6 sm:gap-8 text-center">
             <div>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 mb-2">
                 {paidExpenses}
               </div>
               <p className="text-sm sm:text-base text-muted-foreground">Paid</p>
             </div>
             <div>
-              <div className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-600 mb-2">
                 {pendingExpenses}
               </div>
               <p className="text-sm sm:text-base text-muted-foreground">
@@ -354,7 +374,7 @@ function ExpensesList({
       </Card>
 
       {/* Expenses List */}
-      <div className="space-y-3 lg:space-y-4">
+      <div className="space-y-4 sm:space-y-5 lg:space-y-6">
         {expenses.slice(0, 10).map((expense) => (
           <ExpenseCard
             key={expense.id}
@@ -367,8 +387,8 @@ function ExpensesList({
 
         {expenses.length > 10 && (
           <Card className="border-dashed">
-            <CardContent className="p-4 text-center">
-              <p className="text-sm text-muted-foreground mb-2">
+            <CardContent className="p-6 text-center">
+              <p className="text-sm text-muted-foreground mb-3">
                 Showing 10 of {expenses.length} expenses
               </p>
               <Button variant="outline" size="sm">
@@ -430,16 +450,16 @@ function ExpenseCard({
         groupId={groupId}
       />
       <Card>
-        <CardContent className="p-3 md:p-4">
-          <div className="flex justify-between items-start gap-3">
-            <div className="space-y-1 flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xl md:text-2xl">
+        <CardContent className="p-4 sm:p-5 lg:p-6">
+          <div className="flex justify-between items-start gap-4">
+            <div className="space-y-2 flex-1 min-w-0">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl sm:text-3xl flex-shrink-0">
                   {expense.categoryIcon}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h4 className="font-semibold text-sm md:text-base truncate">
+                  <div className="flex items-center gap-2 flex-wrap mb-2">
+                    <h4 className="font-semibold text-base sm:text-lg truncate">
                       {expense.description}
                     </h4>
                     <Badge className={`text-xs ${statusBadge.color}`}>
@@ -449,40 +469,40 @@ function ExpenseCard({
                       Split between {expense.splits?.length || 0} people
                     </Badge>
                   </div>
-                  <p className="text-xs md:text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-3">
                     Paid by {memberMap.get(expense.paidBy) || "Unknown"} •{" "}
                     {expense.category}
                   </p>
                   {/* Payment Progress Bar */}
-                  <div className="mt-2">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-muted-foreground">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">
                         Progress: {formatCurrency(paidAmount, currency)} /{" "}
                         {formatCurrency(totalAmount, currency)}
                       </span>
-                      <span className="text-xs font-medium">
+                      <span className="text-sm font-medium">
                         {Math.round(paymentProgress)}%
                       </span>
                     </div>
-                    <Progress value={paymentProgress} className="h-2" />
+                    <Progress value={paymentProgress} className="h-2.5" />
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <div className="text-right">
                 <p
-                  className={`font-bold text-sm md:text-base ${getPaymentStatusColor()}`}
+                  className={`font-bold text-lg sm:text-xl ${getPaymentStatusColor()}`}
                 >
                   {formatCurrency(expense.amount, currency)}
                 </p>
-                <p className="text-xs md:text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   {new Date(expense.date).toLocaleDateString()}
                 </p>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
+                  <Button variant="ghost" className="h-9 w-9 p-0">
                     <span className="sr-only">Open menu</span>
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
@@ -502,9 +522,9 @@ function ExpenseCard({
             </div>
           </div>
           {expense.splits && expense.splits.length > 0 && (
-            <div className="mt-3 pt-3 border-t space-y-3">
+            <div className="mt-6 pt-4 border-t space-y-4">
               {/* Action Buttons */}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-3">
                 <SendReminderButton
                   expense={expense}
                   memberMap={memberMap}
@@ -516,38 +536,48 @@ function ExpenseCard({
                   memberMap={memberMap}
                   currency={currency}
                 >
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 touch-manipulation"
+                  >
                     <Receipt className="h-4 w-4" />
                     <span className="hidden sm:inline">Details</span>
+                    <span className="sm:hidden">View</span>
                   </Button>
                 </ExpenseDetailsSheet>
               </div>
 
               {/* Split Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs md:text-sm">
-                {expense.splits.slice(0, 6).map((split: any) => (
-                  <div
-                    key={split.id}
-                    className="flex justify-between items-center py-1"
-                  >
-                    <span className="truncate font-medium">
-                      {memberMap.get(split.userId) || "Unknown"}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <QuickSettleButton
-                        splitId={split.id}
-                        amount={split.amount}
-                        currency={currency}
-                        isPaid={split.isPaid}
-                        groupId={groupId}
-                        memberName={memberMap.get(split.userId) || "Unknown"}
-                      />
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium text-muted-foreground">
+                  Payment Status:
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+                  {expense.splits.slice(0, 6).map((split: any) => (
+                    <div
+                      key={split.id}
+                      className="flex justify-between items-center py-3 px-3 bg-muted/30 rounded-lg border"
+                    >
+                      <span className="truncate font-medium flex-1 min-w-0">
+                        {memberMap.get(split.userId) || "Unknown"}
+                      </span>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                        <QuickSettleButton
+                          splitId={split.id}
+                          amount={split.amount}
+                          currency={currency}
+                          isPaid={split.isPaid}
+                          groupId={groupId}
+                          memberName={memberMap.get(split.userId) || "Unknown"}
+                        />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
                 {expense.splits.length > 6 && (
-                  <div className="col-span-full text-center">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="text-center pt-3">
+                    <Badge variant="outline" className="text-sm">
                       +{expense.splits.length - 6} more
                     </Badge>
                   </div>

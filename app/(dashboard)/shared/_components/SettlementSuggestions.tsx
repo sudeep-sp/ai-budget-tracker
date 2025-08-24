@@ -69,14 +69,12 @@ export default function SettlementSuggestions({
       );
 
       // Invalidate queries to refresh data
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["expense-group", groupId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["group-balances", groupId],
-        }),
-      ]);
+      queryClient.invalidateQueries({
+        queryKey: ["expense-group", groupId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["group-balances", groupId],
+      });
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to record settlement");
@@ -111,14 +109,12 @@ export default function SettlementSuggestions({
     onSuccess: () => {
       toast.success("All settlements recorded successfully!");
 
-      Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["expense-group", groupId],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["group-balances", groupId],
-        }),
-      ]);
+      queryClient.invalidateQueries({
+        queryKey: ["expense-group", groupId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["group-balances", groupId],
+      });
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to record bulk settlements");
@@ -142,24 +138,28 @@ export default function SettlementSuggestions({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
               <Zap className="h-5 w-5 text-orange-500" />
               Quick Settlement
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-sm">
               These payments will settle all balances with minimum transactions
             </CardDescription>
           </div>
           {settlements.length > 1 && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
                   Settle All
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="sm:max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Settle All Balances</AlertDialogTitle>
                   <AlertDialogDescription>
@@ -193,29 +193,39 @@ export default function SettlementSuggestions({
         {settlements.map((settlement, index) => (
           <div
             key={index}
-            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
+            className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/30 rounded-lg gap-3"
           >
-            <div className="flex items-center gap-3 flex-1">
-              <Badge variant="secondary" className="text-xs">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <Badge variant="secondary" className="text-xs flex-shrink-0">
                 #{index + 1}
               </Badge>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium">{settlement.fromUserName}</span>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium">{settlement.toUserName}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm min-w-0">
+                <span className="font-medium truncate">
+                  {settlement.fromUserName}
+                </span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
+                <span className="font-medium truncate">
+                  {settlement.toUserName}
+                </span>
               </div>
-              <Badge variant="outline" className="font-mono text-xs">
+              <Badge
+                variant="outline"
+                className="font-mono text-xs flex-shrink-0"
+              >
                 {formatCurrency(settlement.amount, currency)}
               </Badge>
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700 w-full sm:w-auto touch-manipulation"
+                >
                   <Check className="h-4 w-4 mr-1" />
                   Settle
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="sm:max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirm Settlement</AlertDialogTitle>
                   <AlertDialogDescription>

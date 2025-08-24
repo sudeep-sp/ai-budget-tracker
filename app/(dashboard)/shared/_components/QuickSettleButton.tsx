@@ -28,12 +28,8 @@ export default function QuickSettleButton({
 }: QuickSettleButtonProps) {
   const queryClient = useQueryClient();
 
-  const handleQuickSettle = async () => {
-    try {
-      toast.loading(`Recording payment from ${memberName}...`, {
-        id: `settle-${splitId}`,
-      });
-
+  const quickSettleMutation = useMutation({
+    mutationFn: async () => {
       const response = await fetch(`/api/groups/${groupId}/quick-settle`, {
         method: "POST",
         headers: {
@@ -52,14 +48,15 @@ export default function QuickSettleButton({
         );
       }
 
-      const result = await response.json();
-
+      return response.json();
+    },
+    onSuccess: () => {
       toast.success(`Payment recorded successfully!`, {
         id: `settle-${splitId}`,
       });
 
-      // Refresh data and trigger optimistic update
-      await Promise.all([
+      // Invalidate queries to refresh data
+      Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["expense-group", groupId],
         }),
@@ -69,18 +66,26 @@ export default function QuickSettleButton({
       ]);
 
       onOptimisticUpdate?.();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       toast.error(error.message || "Failed to record payment", {
         id: `settle-${splitId}`,
       });
-    }
+    },
+  });
+
+  const handleQuickSettle = () => {
+    toast.loading(`Recording payment from ${memberName}...`, {
+      id: `settle-${splitId}`,
+    });
+    quickSettleMutation.mutate();
   };
 
   if (isPaid) {
     return (
       <div className="flex items-center gap-1 text-green-600">
-        <Check className="h-3 w-3" />
-        <span className="text-xs font-medium">Paid</span>
+        <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+        <span className="text-xs sm:text-sm font-medium">Paid</span>
       </div>
     );
   }
@@ -89,11 +94,16 @@ export default function QuickSettleButton({
     <Button
       size="sm"
       variant="outline"
-      className="h-6 px-2 text-xs border-orange-200 hover:border-green-200 hover:bg-green-50"
+      className="h-8 sm:h-6 px-3 sm:px-2 text-xs sm:text-xs border-orange-200 hover:border-green-200 hover:bg-green-50 min-w-[60px] sm:min-w-[50px] touch-manipulation"
       onClick={handleQuickSettle}
+      disabled={quickSettleMutation.isPending}
     >
-      <Clock className="h-3 w-3 mr-1" />
-      {formatCurrency(amount, currency)}
+      {quickSettleMutation.isPending ? (
+        <Loader2 className="h-3 w-3 sm:h-3 sm:w-3 mr-1 animate-spin" />
+      ) : (
+        <Clock className="h-3 w-3 sm:h-3 sm:w-3 mr-1" />
+      )}
+      <span className="truncate">{formatCurrency(amount, currency)}</span>
     </Button>
   );
 }

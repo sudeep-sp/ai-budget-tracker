@@ -80,9 +80,21 @@ function CreateCategoryDialog({ type, successCallback, trigger }: Props) {
 
       successCallback(data);
 
-      await queryClient.invalidateQueries({
-        queryKey: ["categories"],
-      });
+      // Invalidate all category-related queries to ensure proper refresh
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["categories"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["categories", type],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["categories", "income"],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["categories", "expense"],
+        }),
+      ]);
 
       setOpen((prev) => !prev);
     },

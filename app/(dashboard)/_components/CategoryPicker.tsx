@@ -17,11 +17,10 @@ import {
 import { Category } from "@/lib/generated/prisma";
 import { TransactionType } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import CreateCategoryDialog from "./CreateCategoryDialog";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { set, success } from "zod";
 
 interface Props {
   type: TransactionType;
@@ -35,9 +34,35 @@ function CategoryPicker({ type, onChange, onCategoryChange }: Props) {
 
   const categoriesQuery = useQuery({
     queryKey: ["categories", type],
-    queryFn: () =>
-      fetch(`/api/categories?type=${type}`).then((res) => res.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/categories?type=${type}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch categories: ${res.statusText}`);
+      }
+      return res.json();
+    },
+    retry: 3,
+    retryDelay: 1000,
   });
+
+  // Deduplicate categories by name, keeping the most recently created one
+  const uniqueCategories = useMemo(() => {
+    if (!categoriesQuery.data) return [];
+
+    const categoryMap = new Map<string, Category>();
+
+    categoriesQuery.data.forEach((category: Category) => {
+      const key = category.name.toLowerCase();
+      const existing = categoryMap.get(key);
+
+      // Keep the most recently created category
+      if (!existing || category.createdAt > existing.createdAt) {
+        categoryMap.set(key, category);
+      }
+    });
+
+    return Array.from(categoryMap.values());
+  }, [categoriesQuery.data]);
 
   useEffect(() => {
     if (!value) return;
@@ -45,7 +70,7 @@ function CategoryPicker({ type, onChange, onCategoryChange }: Props) {
 
     // Also call onCategoryChange if provided
     if (onCategoryChange) {
-      const selectedCategory = categoriesQuery.data?.find(
+      const selectedCategory = uniqueCategories.find(
         (category: Category) => category.name === value
       );
       if (selectedCategory) {
@@ -55,9 +80,9 @@ function CategoryPicker({ type, onChange, onCategoryChange }: Props) {
         });
       }
     }
-  }, [value, onChange, onCategoryChange, categoriesQuery.data]);
+  }, [value, onChange, onCategoryChange, uniqueCategories]);
 
-  const selectedCategory = categoriesQuery.data?.find(
+  const selectedCategory = uniqueCategories.find(
     (category: Category) => category.name === value
   );
 
@@ -95,31 +120,41 @@ function CategoryPicker({ type, onChange, onCategoryChange }: Props) {
           <CommandInput placeholder="Search categories..." />
           <CreateCategoryDialog type={type} successCallback={successCallback} />
           <CommandEmpty>
-            <p>No categories found</p>
-            <p className="text-xs text-muted-foreground">
-              Try creating a new category
-            </p>
+            {categoriesQuery.isError ? (
+              <>
+                <p>Error loading categories</p>
+                <p className="text-xs text-muted-foreground">
+                  Please try again later
+                </p>
+              </>
+            ) : (
+              <>
+                <p>No categories found</p>
+                <p className="text-xs text-muted-foreground">
+                  Try creating a new category
+                </p>
+              </>
+            )}
           </CommandEmpty>
           <CommandGroup>
             <CommandList>
-              {categoriesQuery.data &&
-                categoriesQuery.data.map((category: Category) => (
-                  <CommandItem
-                    key={category.name}
-                    onSelect={() => {
-                      setValue(category.name);
-                      setOpen((prev) => !prev);
-                    }}
-                  >
-                    <CategoryRow category={category} />
-                    <Check
-                      className={cn(
-                        "mr-2 w-4 h-4 opacity-0",
-                        value === category.name && "opacity-100"
-                      )}
-                    />
-                  </CommandItem>
-                ))}
+              {uniqueCategories.map((category: Category) => (
+                <CommandItem
+                  key={category.name}
+                  onSelect={() => {
+                    setValue(category.name);
+                    setOpen((prev) => !prev);
+                  }}
+                >
+                  <CategoryRow category={category} />
+                  <Check
+                    className={cn(
+                      "mr-2 w-4 h-4 opacity-0",
+                      value === category.name && "opacity-100"
+                    )}
+                  />
+                </CommandItem>
+              ))}
             </CommandList>
           </CommandGroup>
         </Command>
