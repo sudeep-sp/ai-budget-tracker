@@ -40,7 +40,7 @@ export async function DeleteCategory(form: DeleteCategorySchemaType) {
         redirect("/sign-in");
     }
 
-    try {        
+    try {
         const result = await prisma.category.delete({
             where: {
                 name_userId_type: {
