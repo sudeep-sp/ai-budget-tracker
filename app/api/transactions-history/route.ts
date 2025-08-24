@@ -85,8 +85,8 @@ async function getTransactionsHistory(userId: string, from: Date, to: Date) {
     });
 
     // Convert shared expenses to transaction format
-    const sharedTransactions = [];
-    
+    const sharedTransactions: any[] = [];
+
     userGroups.forEach((groupMember: any) => {
         groupMember.group.expenses.forEach((expense: any) => {
             const userSplit = expense.splits.find((split: any) => split.userId === userId);
