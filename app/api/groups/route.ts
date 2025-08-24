@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
                 description: group.description,
                 currency: group.currency,
                 memberCount: group._count.members,
+                memberUserIds: group.members.map(member => member.userId), // Add member user IDs for unique counting
                 expenseCount: group._count.expenses,
                 totalExpenses,
                 userRole: userMember?.role || "member",

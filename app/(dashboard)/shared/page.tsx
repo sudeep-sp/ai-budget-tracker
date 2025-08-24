@@ -28,6 +28,7 @@ interface GroupSummary {
   description: string | null;
   currency: string;
   memberCount: number;
+  memberUserIds: string[]; // Add this field for unique member calculation
   expenseCount: number;
   totalExpenses: number;
   userRole: string;
@@ -43,6 +44,22 @@ export default function SharedExpensesPage() {
   });
 
   const groups: GroupSummary[] = groupsQuery.data || [];
+
+  // Calculate unique active members across all groups
+  const calculateUniqueActiveMembers = () => {
+    if (!groups.length) return 0;
+
+    // Collect all unique user IDs across all groups
+    const allMemberIds = new Set<string>();
+
+    groups.forEach((group) => {
+      if (group.memberUserIds) {
+        group.memberUserIds.forEach((userId) => allMemberIds.add(userId));
+      }
+    });
+
+    return allMemberIds.size;
+  };
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-4 md:space-y-6">
@@ -118,7 +135,7 @@ export default function SharedExpensesPage() {
               <div>
                 <p className="text-xs md:text-sm font-medium">Active Members</p>
                 <p className="text-lg md:text-2xl font-bold">
-                  {groups.reduce((sum, group) => sum + group.memberCount, 0)}
+                  {calculateUniqueActiveMembers()}
                 </p>
               </div>
             </div>

@@ -10,14 +10,14 @@ function layout({ children }: { children: ReactNode }) {
           <Logo />
         </div>
       </div>
-      
+
       {/* Main content - responsive container */}
       <div className="flex flex-col items-center justify-center px-4 py-6 md:py-12">
         <div className="w-full max-w-sm sm:max-w-md md:max-w-2xl lg:max-w-3xl">
           {children}
         </div>
       </div>
-      
+
       {/* Background decoration - hidden on mobile for performance */}
       <div className="fixed inset-0 -z-10 hidden md:block">
         <div className="absolute top-1/4 left-1/4 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />

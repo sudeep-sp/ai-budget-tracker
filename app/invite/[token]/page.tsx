@@ -68,11 +68,13 @@ export default function InvitePage({ params }: InvitePageProps) {
         <Card className="mx-auto max-w-md">
           <CardContent className="p-6 md:p-12 text-center">
             <div className="text-4xl md:text-6xl mb-4">❌</div>
-            <h2 className="text-xl md:text-2xl font-bold mb-2">Invalid Invitation</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-2">
+              Invalid Invitation
+            </h2>
             <p className="text-sm md:text-base text-muted-foreground mb-6">
               This invitation link is invalid or has expired.
             </p>
-            <Button 
+            <Button
               onClick={() => router.push("/shared")}
               className="w-full md:w-auto"
             >
@@ -149,13 +151,17 @@ export default function InvitePage({ params }: InvitePageProps) {
             {/* What You Can Do */}
             <Card>
               <CardHeader className="pb-3 md:pb-6">
-                <CardTitle className="text-lg md:text-xl">What you can do in this group</CardTitle>
+                <CardTitle className="text-lg md:text-xl">
+                  What you can do in this group
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <ul className="space-y-2 md:space-y-3">
                   <li className="flex items-start gap-2 text-sm md:text-base">
                     <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span>View all shared expenses and track group spending</span>
+                    <span>
+                      View all shared expenses and track group spending
+                    </span>
                   </li>
                   <li className="flex items-start gap-2 text-sm md:text-base">
                     <Check className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
