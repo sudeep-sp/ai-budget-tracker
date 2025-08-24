@@ -77,6 +77,7 @@ export async function GET(
             balances,
             settlements,
             userBalance,
+            groupId,
             summary: {
                 totalExpenses: expenses.reduce((sum, exp) => sum + exp.amount, 0),
                 totalPaid: payments.reduce((sum, payment) => sum + payment.amount, 0),

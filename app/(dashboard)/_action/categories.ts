@@ -40,13 +40,7 @@ export async function DeleteCategory(form: DeleteCategorySchemaType) {
         redirect("/sign-in");
     }
 
-    try {
-        console.log("Attempting to delete category:", {
-            userId: user.id,
-            name: parsedBody.data.name,
-            type: parsedBody.data.type
-        });
-        
+    try {        
         const result = await prisma.category.delete({
             where: {
                 name_userId_type: {
@@ -56,8 +50,6 @@ export async function DeleteCategory(form: DeleteCategorySchemaType) {
                 }
             }
         });
-        
-        console.log("Category deleted successfully:", result);
         return result;
     } catch (error) {
         console.error("Category deletion error:", error);

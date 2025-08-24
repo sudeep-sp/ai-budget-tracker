@@ -91,7 +91,6 @@ export default function AddExpensePage({ params }: AddExpensePageProps) {
 
   const { mutate: createExpense, isPending } = useMutation({
     mutationFn: async (data: CreateSharedExpenseSchemaType) => {
-      console.log("Sending expense data:", data);
       const response = await fetch(`/api/groups/${groupId}/expenses`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -100,7 +99,6 @@ export default function AddExpensePage({ params }: AddExpensePageProps) {
 
       if (!response.ok) {
         const error = await response.json();
-        console.log("API Error:", error);
         throw new Error(error.error || "Failed to create expense");
       }
 
@@ -184,7 +182,6 @@ export default function AddExpensePage({ params }: AddExpensePageProps) {
       }
     }
 
-    console.log("Submitting data:", data);
     createExpense(data);
   };
 

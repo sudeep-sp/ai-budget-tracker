@@ -73,49 +73,66 @@ export function calculateBalances(
             userId: member.userId,
             name: member.name,
             email: member.email,
-            totalOwed: 0,
-            totalOwing: 0,
-            netBalance: 0,
+            totalOwed: 0,    // What they owe to others
+            totalOwing: 0,   // What others owe to them
+            netBalance: 0,   // Positive = others owe them, Negative = they owe others
             transactions: []
         };
     });
 
-    // Calculate what each person owes from expenses
+    // Process each expense
     expenses.forEach(expense => {
-        expense.splits?.forEach((split) => {
-            if (balances[split.userId]) {
-                balances[split.userId].totalOwed += split.amount;
-                balances[split.userId].transactions.push({
-                    expenseId: expense.id,
-                    description: expense.description,
-                    amount: split.amount,
-                    isPaid: split.isPaid,
-                    dueDate: expense.date
-                });
+        // Calculate total payments made for this expense's splits
+        const expensePayments = new Map<string, number>();
+        payments.forEach(payment => {
+            const split = expense.splits?.find(s => s.id === payment.splitId);
+            if (split) {
+                expensePayments.set(split.userId, (expensePayments.get(split.userId) || 0) + payment.amount);
             }
         });
 
-        // The person who paid is owed money by others
+        expense.splits?.forEach((split) => {
+            if (!balances[split.userId]) return;
+
+            // Amount paid towards this split
+            const paidAmount = expensePayments.get(split.userId) || 0;
+            // Remaining amount owed for this split
+            const remainingOwed = Math.max(0, split.amount - paidAmount);
+
+            // IMPORTANT: Person who paid the expense should not owe money for their own share
+            // They already paid the full amount upfront, so they don't owe anything for their split
+            if (split.userId !== expense.paidBy) {
+                // Add to their debt (what they owe) - only if they didn't pay the expense
+                balances[split.userId].totalOwed += remainingOwed;
+            }
+
+            // Track transaction for everyone (including the person who paid, for record keeping)
+            balances[split.userId].transactions.push({
+                expenseId: expense.id,
+                description: expense.description,
+                amount: split.amount,
+                isPaid: split.isPaid || (paidAmount >= split.amount) || (split.userId === expense.paidBy),
+                dueDate: expense.date
+            });
+        });
+
+        // The person who paid should be credited for what others owe them
         if (balances[expense.paidBy]) {
             const othersOwed = expense.splits
-                ?.filter((split) => split.userId !== expense.paidBy)
-                ?.reduce((sum: number, split) => sum + split.amount, 0) || 0;
+                ?.filter(split => split.userId !== expense.paidBy)
+                ?.reduce((sum, split) => {
+                    const paidAmount = expensePayments.get(split.userId) || 0;
+                    const remainingOwed = Math.max(0, split.amount - paidAmount);
+                    return sum + remainingOwed;
+                }, 0) || 0;
 
             balances[expense.paidBy].totalOwing += othersOwed;
         }
     });
 
-    // Subtract payments made
-    payments.forEach(payment => {
-        const split = expenses
-            .flatMap(e => e.splits || [])
-            .find(s => s?.id === payment.splitId);
-
-        if (split && balances[split.userId]) {
-            balances[split.userId].totalOwed -= payment.amount;
-        }
-    });    // Calculate net balances
+    // Calculate net balances
     Object.values(balances).forEach(balance => {
+        // Net balance: positive means others owe them, negative means they owe others
         balance.netBalance = balance.totalOwing - balance.totalOwed;
     });
 

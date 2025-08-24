@@ -93,7 +93,6 @@ export async function POST(
 
     try {
         const body = await request.json();
-        console.log("Received body:", JSON.stringify(body, null, 2));
 
         const parsedBody = CreateSharedExpenseSchema.safeParse({
             ...body,
@@ -101,7 +100,6 @@ export async function POST(
         });
 
         if (!parsedBody.success) {
-            console.log("Validation failed:", JSON.stringify(parsedBody.error.issues, null, 2));
             return Response.json(
                 { error: "Invalid input", details: parsedBody.error.issues },
                 { status: 400 }
@@ -161,6 +159,7 @@ export async function POST(
                             expenseId: newExpense.id,
                             userId: split.userId,
                             amount: split.amount,
+                            isPaid: split.userId === paidBy, // Mark as paid if this is the person who paid
                             percentage: splitType === "percentage"
                                 ? splits.find(s => s.userId === split.userId)?.percentage
                                 : null,
