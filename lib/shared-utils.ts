@@ -65,6 +65,11 @@ export function calculateBalances(
     }>,
     members: { userId: string; name: string; email: string }[]
 ): UserBalance[] {
+    // Validate inputs
+    if (!expenses || !payments || !members) {
+        throw new Error("Invalid input: expenses, payments, and members are required");
+    }
+
     const balances: { [userId: string]: UserBalance } = {};
 
     // Initialize balances for all members
@@ -80,107 +85,113 @@ export function calculateBalances(
         };
     });
 
+    // Create a map of payments by splitId for faster lookup
+    const paymentsBySplit = new Map<string, number>();
+    payments.forEach(payment => {
+        const current = paymentsBySplit.get(payment.splitId) || 0;
+        paymentsBySplit.set(payment.splitId, current + payment.amount);
+    });
+
     // Process each expense
     expenses.forEach(expense => {
-        // Calculate total payments made for this expense's splits
-        const expensePayments = new Map<string, number>();
-        payments.forEach(payment => {
-            const split = expense.splits?.find(s => s.id === payment.splitId);
-            if (split) {
-                expensePayments.set(split.userId, (expensePayments.get(split.userId) || 0) + payment.amount);
-            }
-        });
-
         expense.splits?.forEach((split) => {
             if (!balances[split.userId]) return;
 
-            // Amount paid towards this split
-            const paidAmount = expensePayments.get(split.userId) || 0;
-            // Remaining amount owed for this split
-            const remainingOwed = Math.max(0, split.amount - paidAmount);
+            // Amount paid towards this specific split
+            const paidAmount = paymentsBySplit.get(split.id) || 0;
 
-            // IMPORTANT: Person who paid the expense should not owe money for their own share
-            // They already paid the full amount upfront, so they don't owe anything for their split
-            if (split.userId !== expense.paidBy) {
-                // Add to their debt (what they owe) - only if they didn't pay the expense
+            // Determine if split is fully paid:
+            // 1. If the split owner is the same person who paid the expense, they don't owe anything
+            // 2. If there are sufficient payment records
+            // 3. If split is marked as paid AND has payment records (to avoid phantom paid status)
+            const isOriginalPayer = split.userId === expense.paidBy;
+            const hasSufficientPayments = paidAmount >= split.amount;
+            const isValidlyMarkedPaid = split.isPaid && paidAmount > 0; // Only consider paid if there are actual payments
+
+            const isFullyPaid = isOriginalPayer || hasSufficientPayments || isValidlyMarkedPaid;
+
+            // Calculate remaining owed amount
+            let remainingOwed = 0;
+            if (!isFullyPaid) {
+                remainingOwed = Math.max(0, split.amount - paidAmount);
+            }
+
+            // If this person didn't pay the original expense, they owe money for their share
+            if (split.userId !== expense.paidBy && remainingOwed > 0) {
                 balances[split.userId].totalOwed += remainingOwed;
             }
 
-            // Track transaction for everyone (including the person who paid, for record keeping)
+            // The person who paid the expense is owed money from others (except their own share)
+            if (expense.paidBy !== split.userId && remainingOwed > 0) {
+                balances[expense.paidBy].totalOwing += remainingOwed;
+            }
+
+            // Track transaction for record keeping
             balances[split.userId].transactions.push({
                 expenseId: expense.id,
                 description: expense.description,
                 amount: split.amount,
-                isPaid: split.isPaid || (paidAmount >= split.amount) || (split.userId === expense.paidBy),
+                isPaid: isFullyPaid,
                 dueDate: expense.date
             });
         });
-
-        // The person who paid should be credited for what others owe them
-        if (balances[expense.paidBy]) {
-            const othersOwed = expense.splits
-                ?.filter(split => split.userId !== expense.paidBy)
-                ?.reduce((sum, split) => {
-                    const paidAmount = expensePayments.get(split.userId) || 0;
-                    const remainingOwed = Math.max(0, split.amount - paidAmount);
-                    return sum + remainingOwed;
-                }, 0) || 0;
-
-            balances[expense.paidBy].totalOwing += othersOwed;
-        }
     });
 
-    // Calculate net balances
+    // Calculate net balances with proper rounding
     Object.values(balances).forEach(balance => {
         // Net balance: positive means others owe them, negative means they owe others
-        balance.netBalance = balance.totalOwing - balance.totalOwed;
+        balance.netBalance = Math.round((balance.totalOwing - balance.totalOwed) * 100) / 100;
+
+        // Round other values for consistency
+        balance.totalOwed = Math.round(balance.totalOwed * 100) / 100;
+        balance.totalOwing = Math.round(balance.totalOwing * 100) / 100;
     });
 
     return Object.values(balances);
 }
 
 /**
- * Generate optimal settlement suggestions to minimize number of transactions
+ * Generate simple, direct settlement suggestions (person-to-person payments)
  */
 export function generateSettlementSuggestions(
     balances: UserBalance[]
 ): SettlementSuggestion[] {
     const suggestions: SettlementSuggestion[] = [];
 
-    // Separate creditors (positive balance) and debtors (negative balance)
-    const creditors = balances.filter(b => b.netBalance > 0.01).sort((a, b) => b.netBalance - a.netBalance);
-    const debtors = balances.filter(b => b.netBalance < -0.01).sort((a, b) => a.netBalance - b.netBalance);
+    // Find people who owe money (negative balance)
+    const debtors = balances.filter(b => b.netBalance < -0.01);
 
-    let creditorIndex = 0;
-    let debtorIndex = 0;
+    // Find people who should receive money (positive balance)
+    const creditors = balances.filter(b => b.netBalance > 0.01);
 
-    while (creditorIndex < creditors.length && debtorIndex < debtors.length) {
-        const creditor = creditors[creditorIndex];
-        const debtor = debtors[debtorIndex];
+    // For each person who owes money, create direct payment to the person they owe most to
+    debtors.forEach(debtor => {
+        const amountToPay = Math.abs(debtor.netBalance);
 
-        const settleAmount = Math.min(creditor.netBalance, Math.abs(debtor.netBalance));
+        if (amountToPay > 0.01) {
+            // Find the creditor with the highest balance (simplest approach)
+            const primaryCreditor = creditors.reduce((prev, current) =>
+                (prev.netBalance > current.netBalance) ? prev : current
+            );
 
-        if (settleAmount > 0.01) {
-            suggestions.push({
-                fromUserId: debtor.userId,
-                toUserId: creditor.userId,
-                fromUserName: debtor.name,
-                toUserName: creditor.name,
-                amount: Math.round(settleAmount * 100) / 100,
-                reason: "Net settlement to minimize transactions",
-                relatedExpenses: [
-                    ...creditor.transactions.filter(t => !t.isPaid).map(t => t.expenseId),
-                    ...debtor.transactions.filter(t => !t.isPaid).map(t => t.expenseId)
-                ]
-            });
+            if (primaryCreditor) {
+                // Get unpaid expenses that this debtor is involved in
+                const relatedExpenses = debtor.transactions
+                    .filter(t => !t.isPaid)
+                    .map(t => t.expenseId);
 
-            creditor.netBalance -= settleAmount;
-            debtor.netBalance += settleAmount;
+                suggestions.push({
+                    fromUserId: debtor.userId,
+                    toUserId: primaryCreditor.userId,
+                    fromUserName: debtor.name,
+                    toUserName: primaryCreditor.name,
+                    amount: Math.round(amountToPay * 100) / 100,
+                    reason: `Direct payment for shared expenses`,
+                    relatedExpenses: Array.from(new Set(relatedExpenses))
+                });
+            }
         }
-
-        if (creditor.netBalance < 0.01) creditorIndex++;
-        if (Math.abs(debtor.netBalance) < 0.01) debtorIndex++;
-    }
+    });
 
     return suggestions;
 }

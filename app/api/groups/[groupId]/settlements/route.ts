@@ -43,20 +43,9 @@ export async function POST(
             },
         });
 
-        // Mark related expense splits as paid
+        // Create payment records and mark splits as paid
         if (relatedExpenses && relatedExpenses.length > 0) {
-            await prisma.expenseSplit.updateMany({
-                where: {
-                    expense: {
-                        id: { in: relatedExpenses },
-                        groupId,
-                    },
-                    userId: fromUserId,
-                },
-                data: { isPaid: true },
-            });
-
-            // Create payment records for each split
+            // First, get splits that need payment records (not fully paid yet)
             const splits = await prisma.expenseSplit.findMany({
                 where: {
                     expense: {
@@ -65,21 +54,51 @@ export async function POST(
                     },
                     userId: fromUserId,
                 },
+                include: {
+                    payments: true,
+                },
             });
 
-            const paymentPromises = splits.map(split =>
-                prisma.expensePayment.create({
-                    data: {
-                        splitId: split.id,
-                        paidBy: fromUserId,
-                        amount: split.amount,
-                        method: "settlement",
-                        notes: `Settlement payment (Settlement ID: ${settlement.id})`,
-                    },
-                })
-            );
+            // Use transaction to ensure atomicity
+            await prisma.$transaction(async (tx) => {
+                const paymentPromises = splits.map(split => {
+                    // Calculate remaining amount after existing payments
+                    const totalPaid = split.payments.reduce((sum, payment) => sum + payment.amount, 0);
+                    const remainingAmount = Math.max(0, split.amount - totalPaid);
 
-            await Promise.all(paymentPromises);
+                    if (remainingAmount > 0) {
+                        return tx.expensePayment.create({
+                            data: {
+                                splitId: split.id,
+                                paidBy: fromUserId,
+                                amount: remainingAmount,
+                                method: "settlement",
+                                notes: `Settlement payment (Settlement ID: ${settlement.id})`,
+                            },
+                        });
+                    }
+                    return null;
+                }).filter(Boolean);
+
+                await Promise.all(paymentPromises);
+
+                // Mark splits as paid only for splits that had payment records created
+                const splitsToMarkPaid = splits.filter(split => {
+                    const totalPaid = split.payments.reduce((sum, payment) => sum + payment.amount, 0);
+                    const remainingAmount = Math.max(0, split.amount - totalPaid);
+                    return remainingAmount > 0; // Only splits that had remaining amounts (and thus got payment records)
+                });
+
+                if (splitsToMarkPaid.length > 0) {
+                    await tx.expenseSplit.updateMany({
+                        where: {
+                            id: { in: splitsToMarkPaid.map(s => s.id) },
+                            isPaid: false, // Only mark unpaid splits as paid
+                        },
+                        data: { isPaid: true },
+                    });
+                }
+            });
         }
 
         // Log activity

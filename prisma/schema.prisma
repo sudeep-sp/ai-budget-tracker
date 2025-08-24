@@ -1,12 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client-js"
-  output   = "../lib/generated/prisma"
+  provider      = "prisma-client-js"
+  output        = "../lib/generated/prisma"
   binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
@@ -16,196 +10,180 @@ datasource db {
 }
 
 model UserSettings {
-  userId String @id
-  currency String
+  userId         String  @id
+  currency       String
   defaultGroupId String?
 }
 
-model Category{
+model Category {
   createdAt DateTime @default(now())
-  name String
-  userId String
-  icon String
-  type String @default("income")
-  groupId String? // null means personal category
+  name      String
+  userId    String
+  icon      String
+  type      String   @default("income")
+  groupId   String?
 
   @@unique([name, userId, type])
 }
 
 model Transaction {
-  id String @id @default(uuid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-
-  amount Float
-  description String
-  date DateTime
-  userId String
-  type String @default("income")
-
-  category String
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now())
+  amount       Float
+  description  String
+  date         DateTime
+  userId       String
+  type         String   @default("income")
+  category     String
   categoryIcon String
-  groupId String? // null means personal transaction
+  groupId      String?
 }
 
-// Shared Budget & Bill Splitting Models
 model ExpenseGroup {
-  id          String   @id @default(uuid())
+  id          String            @id @default(uuid())
   name        String
   description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   String   // userId who created the group
-  currency    String   @default("USD")
-  isActive    Boolean  @default(true)
-  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  createdBy   String
+  currency    String            @default("USD")
+  isActive    Boolean           @default(true)
+  invitations GroupInvitation[]
   members     GroupMember[]
   expenses    SharedExpense[]
-  invitations GroupInvitation[]
 }
 
 model GroupMember {
-  id       String @id @default(uuid())
-  groupId  String
-  userId   String
-  name     String  // Display name in group
-  email    String
-  role     String  @default("member") // "owner", "admin", "member"
-  permissions String @default("[]") // JSON string array of permissions
-  joinedAt DateTime @default(now())
-  isActive Boolean @default(true)
-  
-  group    ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  
+  id          String       @id @default(uuid())
+  groupId     String
+  userId      String
+  name        String
+  email       String
+  role        String       @default("member")
+  permissions String       @default("[]")
+  joinedAt    DateTime     @default(now())
+  isActive    Boolean      @default(true)
+  group       ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
   @@unique([groupId, userId])
 }
 
 model GroupInvitation {
-  id        String      @id @default(uuid())
+  id        String       @id @default(uuid())
   groupId   String
   email     String
-  userId    String?     // Clerk userId of the invitee (if they exist)
-  invitedBy String      // userId who sent invitation
-  status    String      @default("pending") // "pending", "accepted", "declined", "expired"
-  token     String      @unique
-  createdAt DateTime    @default(now())
+  userId    String?
+  invitedBy String
+  status    String       @default("pending")
+  token     String       @unique
+  createdAt DateTime     @default(now())
   expiresAt DateTime
-  
   group     ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  
+
   @@unique([groupId, email])
 }
 
 model SharedExpense {
-  id          String   @id @default(uuid())
-  groupId     String
-  paidBy      String   // userId who paid
-  amount      Float
-  description String
-  category    String
-  categoryIcon String
-  date        DateTime
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Split configuration
-  splitType   String   // "equal", "percentage", "custom", "shares"
-  splitData   String   // JSON storing split details
-  isRecurring Boolean  @default(false)
-  recurringConfig String? // JSON for recurring settings
-  
-  group       ExpenseGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  splits      ExpenseSplit[]
-  attachments ExpenseAttachment[]
+  id              String              @id @default(uuid())
+  groupId         String
+  paidBy          String
+  amount          Float
+  description     String
+  category        String
+  categoryIcon    String
+  date            DateTime
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  splitType       String
+  splitData       String
+  isRecurring     Boolean             @default(false)
+  recurringConfig String?
+  attachments     ExpenseAttachment[]
+  splits          ExpenseSplit[]
+  group           ExpenseGroup        @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
 
 model ExpenseSplit {
-  id        String @id @default(uuid())
-  expenseId String
-  userId    String  // who owes this amount
-  amount    Float   // how much they owe
-  percentage Float? // if percentage split
-  shares    Int?    // if share-based split
-  isPaid    Boolean @default(false)
-  
-  expense   SharedExpense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  payments  ExpensePayment[]
-  
+  id         String           @id @default(uuid())
+  expenseId  String
+  userId     String
+  amount     Float
+  percentage Float?
+  shares     Int?
+  isPaid     Boolean          @default(false)
+  payments   ExpensePayment[]
+  expense    SharedExpense    @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
   @@unique([expenseId, userId])
 }
 
 model ExpensePayment {
-  id        String   @id @default(uuid())
-  splitId   String
-  paidBy    String   // userId who made payment
-  amount    Float
-  date      DateTime @default(now())
-  method    String?  // "cash", "venmo", "bank_transfer", "paypal", etc.
-  notes     String?
-  
-  split     ExpenseSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  id      String       @id @default(uuid())
+  splitId String
+  paidBy  String
+  amount  Float
+  date    DateTime     @default(now())
+  method  String?
+  notes   String?
+  split   ExpenseSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
 }
 
 model ExpenseAttachment {
-  id        String @id @default(uuid())
-  expenseId String
-  fileName  String
-  fileUrl   String
-  fileType  String
-  fileSize  Int
-  uploadedAt DateTime @default(now())
+  id         String        @id @default(uuid())
+  expenseId  String
+  fileName   String
+  fileUrl    String
+  fileType   String
+  fileSize   Int
+  uploadedAt DateTime      @default(now())
   uploadedBy String
-  
-  expense   SharedExpense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  expense    SharedExpense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
 }
 
-// Settlement tracking
 model Settlement {
-  id          String   @id @default(uuid())
-  groupId     String
-  fromUserId  String   // who owes money
-  toUserId    String   // who is owed money
-  amount      Float
-  settledAt   DateTime @default(now())
-  method      String?
-  notes       String?
-  
+  id         String   @id @default(uuid())
+  groupId    String
+  fromUserId String
+  toUserId   String
+  amount     Float
+  settledAt  DateTime @default(now())
+  method     String?
+  notes      String?
+
   @@index([groupId])
   @@index([fromUserId])
   @@index([toUserId])
 }
 
-// Activity log for group actions
 model GroupActivity {
   id        String   @id @default(uuid())
   groupId   String
-  userId    String   // who performed the action
-  action    String   // "expense_added", "payment_made", "member_added", etc.
-  details   String   // JSON with action details
+  userId    String
+  action    String
+  details   String
   createdAt DateTime @default(now())
-  
+
   @@index([groupId, createdAt])
 }
 
 model MonthHistory {
-  userId String
-  day Int
-  month Int
-  year Int
-  income Float
+  userId  String
+  day     Int
+  month   Int
+  year    Int
+  income  Float
   expense Float
 
   @@id([day, month, year, userId])
-
 }
 
 model YearHistory {
-  userId String
-  month Int
-  year Int
-  income Float
+  userId  String
+  month   Int
+  year    Int
+  income  Float
   expense Float
 
   @@id([month, year, userId])
-
 }

@@ -50,51 +50,71 @@ export async function POST(
             return Response.json({ error: "Split is already fully paid" }, { status: 400 });
         }
 
+        // Validate that the user can make this payment
+        // Only the person who owes the money or the expense payer can make payments
+        if (user.id !== split.userId && user.id !== split.expense.paidBy) {
+            return Response.json({ error: "You cannot make payments for other people's splits" }, { status: 403 });
+        }
+
         // Calculate remaining amount
         const remainingAmount = split.amount - totalPaid;
         const paymentAmount = Math.min(amount, remainingAmount);
 
-        // Create payment record
-        const payment = await prisma.expensePayment.create({
-            data: {
-                splitId,
-                paidBy: user.id,
-                amount: paymentAmount,
-                method: "quick_settle",
-                notes: "Quick settle payment",
-            },
-        });
-
-        // Update split's isPaid status if fully paid
-        const newTotalPaid = totalPaid + paymentAmount;
-        if (newTotalPaid >= split.amount) {
-            await prisma.expenseSplit.update({
-                where: { id: splitId },
-                data: { isPaid: true },
-            });
+        // Ensure payment amount is positive
+        if (paymentAmount <= 0) {
+            return Response.json({ error: "Invalid payment amount" }, { status: 400 });
         }
 
-        // Log activity
-        await prisma.groupActivity.create({
-            data: {
-                groupId,
-                userId: user.id,
-                action: "payment_made",
-                details: JSON.stringify({
-                    expenseId: split.expense.id,
+        // Use transaction to ensure data consistency
+        const result = await prisma.$transaction(async (tx) => {
+            // Create payment record
+            const payment = await tx.expensePayment.create({
+                data: {
                     splitId,
+                    paidBy: user.id,
                     amount: paymentAmount,
                     method: "quick_settle",
-                }),
-            },
+                    notes: "Quick settle payment",
+                },
+            });
+
+            // Update split's isPaid status if fully paid
+            const newTotalPaid = totalPaid + paymentAmount;
+            if (newTotalPaid >= split.amount) {
+                await tx.expenseSplit.update({
+                    where: { id: splitId },
+                    data: { isPaid: true },
+                });
+            }
+
+            // Log activity
+            await tx.groupActivity.create({
+                data: {
+                    groupId,
+                    userId: user.id,
+                    action: "payment_made",
+                    details: JSON.stringify({
+                        expenseId: split.expense.id,
+                        splitId,
+                        amount: paymentAmount,
+                        method: "quick_settle",
+                    }),
+                },
+            });
+
+            return {
+                payment,
+                isPaid: newTotalPaid >= split.amount,
+                newTotalPaid
+            };
         });
 
         return Response.json({
             success: true,
             payment: {
-                id: payment.id,
+                id: result.payment.id,
                 amount: paymentAmount,
-                isPaid: newTotalPaid >= split.amount,
+                isPaid: result.isPaid,
             },
         });
     } catch (error) {

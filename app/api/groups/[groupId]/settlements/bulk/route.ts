@@ -62,7 +62,7 @@ export async function POST(
                         data: { isPaid: true },
                     });
 
-                    // Create payment records for each split
+                    // Create payment records for each split, accounting for existing payments
                     const splits = await tx.expenseSplit.findMany({
                         where: {
                             expense: {
@@ -70,19 +70,29 @@ export async function POST(
                                 groupId,
                             },
                             userId: fromUserId,
+                            isPaid: false, // Only unpaid splits
+                        },
+                        include: {
+                            payments: true,
                         },
                     });
 
                     for (const split of splits) {
-                        await tx.expensePayment.create({
-                            data: {
-                                splitId: split.id,
-                                paidBy: fromUserId,
-                                amount: split.amount,
-                                method: "bulk_settlement",
-                                notes: `Bulk settlement payment (Settlement ID: ${settlementRecord.id})`,
-                            },
-                        });
+                        // Calculate remaining amount after existing payments
+                        const totalPaid = split.payments.reduce((sum, payment) => sum + payment.amount, 0);
+                        const remainingAmount = Math.max(0, split.amount - totalPaid);
+
+                        if (remainingAmount > 0) {
+                            await tx.expensePayment.create({
+                                data: {
+                                    splitId: split.id,
+                                    paidBy: fromUserId,
+                                    amount: remainingAmount,
+                                    method: "bulk_settlement",
+                                    notes: `Bulk settlement payment (Settlement ID: ${settlementRecord.id})`,
+                                },
+                            });
+                        }
                     }
                 }
 

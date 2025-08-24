@@ -4,17 +4,6 @@ import React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Check, Clock, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/shared-utils";
 
@@ -39,8 +28,12 @@ export default function QuickSettleButton({
 }: QuickSettleButtonProps) {
   const queryClient = useQueryClient();
 
-  const settleMutation = useMutation({
-    mutationFn: async () => {
+  const handleQuickSettle = async () => {
+    try {
+      toast.loading(`Recording payment from ${memberName}...`, {
+        id: `settle-${splitId}`,
+      });
+
       const response = await fetch(`/api/groups/${groupId}/quick-settle`, {
         method: "POST",
         headers: {
@@ -54,25 +47,19 @@ export default function QuickSettleButton({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to settle payment");
+        throw new Error(
+          error.error || error.message || "Failed to settle payment"
+        );
       }
 
-      return response.json();
-    },
-    onMutate: () => {
-      // Optimistic update
-      onOptimisticUpdate?.();
-      toast.loading(`Recording payment from ${memberName}...`, {
-        id: `settle-${splitId}`,
-      });
-    },
-    onSuccess: () => {
+      const result = await response.json();
+
       toast.success(`Payment recorded successfully!`, {
         id: `settle-${splitId}`,
       });
 
-      // Invalidate queries to refresh data
-      Promise.all([
+      // Refresh data and trigger optimistic update
+      await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["expense-group", groupId],
         }),
@@ -80,13 +67,14 @@ export default function QuickSettleButton({
           queryKey: ["group-balances", groupId],
         }),
       ]);
-    },
-    onError: (error: any) => {
+
+      onOptimisticUpdate?.();
+    } catch (error: any) {
       toast.error(error.message || "Failed to record payment", {
         id: `settle-${splitId}`,
       });
-    },
-  });
+    }
+  };
 
   if (isPaid) {
     return (
@@ -98,46 +86,14 @@ export default function QuickSettleButton({
   }
 
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-6 px-2 text-xs border-orange-200 hover:border-green-200 hover:bg-green-50"
-        >
-          <Clock className="h-3 w-3 mr-1" />
-          {formatCurrency(amount, currency)}
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent className="sm:max-w-md">
-        <AlertDialogHeader>
-          <AlertDialogTitle>Mark Payment as Settled</AlertDialogTitle>
-          <AlertDialogDescription>
-            Are you sure {memberName} has paid{" "}
-            {formatCurrency(amount, currency)} for their share of this expense?
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={() => settleMutation.mutate()}
-            disabled={settleMutation.isPending}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            {settleMutation.isPending ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Recording...
-              </>
-            ) : (
-              <>
-                <Check className="h-4 w-4 mr-2" />
-                Mark as Paid
-              </>
-            )}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-6 px-2 text-xs border-orange-200 hover:border-green-200 hover:bg-green-50"
+      onClick={handleQuickSettle}
+    >
+      <Clock className="h-3 w-3 mr-1" />
+      {formatCurrency(amount, currency)}
+    </Button>
   );
 }

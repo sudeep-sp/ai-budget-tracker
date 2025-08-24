@@ -64,11 +64,21 @@ export async function GET(
             select: { userId: true, name: true, email: true },
         });
 
-        // Calculate balances
-        const balances = calculateBalances(expenses, payments, members);
+        // Calculate balances with error handling
+        let balances, settlements;
+        try {
+            balances = calculateBalances(expenses, payments, members);
+            settlements = generateSettlementSuggestions(balances);
 
-        // Generate settlement suggestions
-        const settlements = generateSettlementSuggestions(balances);
+            console.log("✅ Balance calculation complete:", {
+                balancesCount: balances.length,
+                paymentsCount: payments.length,
+                userBalance: balances.find(b => b.userId === user.id)?.netBalance
+            });
+        } catch (error) {
+            console.error("Error in balance calculation:", error);
+            return Response.json({ error: "Failed to calculate balances" }, { status: 500 });
+        }
 
         // Get current user's balance
         const userBalance = balances.find(b => b.userId === user.id);
