@@ -478,3 +478,57 @@ export function generateRecurringInstances(
 
     return instances;
 }
+
+/**
+ * Get user's shared expenses to add to individual totals
+ */
+export async function getUserSharedExpenses(
+    userId: string,
+    from: Date,
+    to: Date,
+    prisma: any
+) {
+    // Get shared expenses where user is a member
+    const userGroups = await prisma.groupMember.findMany({
+        where: {
+            userId,
+            isActive: true
+        },
+        include: {
+            group: {
+                include: {
+                    expenses: {
+                        where: {
+                            date: {
+                                gte: from,
+                                lte: to
+                            }
+                        },
+                        include: {
+                            splits: {
+                                where: {
+                                    userId
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Calculate total shared expenses for the user
+    let totalSharedExpenses = 0;
+
+    userGroups.forEach((groupMember: any) => {
+        groupMember.group.expenses.forEach((expense: any) => {
+            const userSplit = expense.splits.find((split: any) => split.userId === userId);
+            if (userSplit) {
+                // Add user's share of the expense to their total
+                totalSharedExpenses += userSplit.amount;
+            }
+        });
+    });
+
+    return totalSharedExpenses;
+}

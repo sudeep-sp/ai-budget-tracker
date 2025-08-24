@@ -77,6 +77,48 @@ async function getYearHistory(userId: string, year: number) {
         }]
     });
 
+    // Get shared expenses for the year
+    const userGroups = await prisma.groupMember.findMany({
+        where: {
+            userId,
+            isActive: true
+        },
+        include: {
+            group: {
+                include: {
+                    expenses: {
+                        where: {
+                            date: {
+                                gte: new Date(year, 0, 1),
+                                lte: new Date(year, 11, 31, 23, 59, 59)
+                            }
+                        },
+                        include: {
+                            splits: {
+                                where: {
+                                    userId
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Calculate shared expenses by month
+    const sharedExpensesByMonth: { [month: number]: number } = {};
+    
+    userGroups.forEach((groupMember: any) => {
+        groupMember.group.expenses.forEach((expense: any) => {
+            const userSplit = expense.splits.find((split: any) => split.userId === userId);
+            if (userSplit) {
+                const month = expense.date.getMonth();
+                sharedExpensesByMonth[month] = (sharedExpensesByMonth[month] || 0) + userSplit.amount;
+            }
+        });
+    });
+
     if (!result || result.length === 0) return [];
 
     const history: HistoryData[] = [];
@@ -90,6 +132,10 @@ async function getYearHistory(userId: string, year: number) {
             expense = month._sum.expense || 0;
             income = month._sum.income || 0;
         }
+
+        // Add shared expenses to the month
+        const sharedExpenses = sharedExpensesByMonth[i] || 0;
+        expense += sharedExpenses;
 
         history.push({
             expense,
@@ -119,6 +165,48 @@ async function getMonthHistory(userId: string, year: number, month: number) {
         }]
     });
 
+    // Get shared expenses for the month
+    const userGroups = await prisma.groupMember.findMany({
+        where: {
+            userId,
+            isActive: true
+        },
+        include: {
+            group: {
+                include: {
+                    expenses: {
+                        where: {
+                            date: {
+                                gte: new Date(year, month, 1),
+                                lte: new Date(year, month + 1, 0, 23, 59, 59)
+                            }
+                        },
+                        include: {
+                            splits: {
+                                where: {
+                                    userId
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Calculate shared expenses by day
+    const sharedExpensesByDay: { [day: number]: number } = {};
+    
+    userGroups.forEach((groupMember: any) => {
+        groupMember.group.expenses.forEach((expense: any) => {
+            const userSplit = expense.splits.find((split: any) => split.userId === userId);
+            if (userSplit) {
+                const day = expense.date.getDate();
+                sharedExpensesByDay[day] = (sharedExpensesByDay[day] || 0) + userSplit.amount;
+            }
+        });
+    });
+
     if (!result || result.length === 0) return [];
 
     const history: HistoryData[] = [];
@@ -133,6 +221,10 @@ async function getMonthHistory(userId: string, year: number, month: number) {
             expense = day._sum.expense || 0;
             income = day._sum.income || 0;
         }
+
+        // Add shared expenses to the day
+        const sharedExpenses = sharedExpensesByDay[i] || 0;
+        expense += sharedExpenses;
 
         history.push({
             expense,

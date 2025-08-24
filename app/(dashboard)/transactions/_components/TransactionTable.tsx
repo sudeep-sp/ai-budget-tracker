@@ -77,7 +77,14 @@ const columns: ColumnDef<TransactionHistoryRow>[] = [
     ),
     cell: ({ row }) => (
       <div className="capitalize text-xs md:text-sm truncate max-w-32 md:max-w-none">
-        {row.original.description}
+        <div className="flex items-center gap-1">
+          {row.original.description}
+          {row.original.isShared && (
+            <span className="text-xs bg-blue-100 text-blue-700 px-1 rounded">
+              Shared
+            </span>
+          )}
+        </div>
       </div>
     ),
   },
@@ -329,6 +336,15 @@ export default TransactionTable;
 
 function RowActions({ transaction }: { transaction: TransactionHistoryRow }) {
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+
+  // Don't show delete option for shared transactions
+  if (transaction.isShared) {
+    return (
+      <div className="text-xs text-muted-foreground">
+        Shared expense
+      </div>
+    );
+  }
 
   return (
     <>

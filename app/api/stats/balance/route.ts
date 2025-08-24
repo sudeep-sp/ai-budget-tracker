@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { OverviewQuerySchema } from "@/schema/overview";
+import { getUserSharedExpenses } from "@/lib/shared-utils";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -22,9 +23,17 @@ export async function GET(request: Request) {
         return Response.json(queryParams.error.message, { status: 400 });
     }
 
-    const stats = await getUserBalanceStats(user.id, queryParams.data.from, queryParams.data.to);
+    // Get individual stats
+    const individualStats = await getUserBalanceStats(user.id, queryParams.data.from, queryParams.data.to);
 
-    return Response.json(stats);
+    // Get shared expenses and add to individual expenses
+    const sharedExpenses = await getUserSharedExpenses(user.id, queryParams.data.from, queryParams.data.to, prisma);
+
+    return Response.json({
+        income: individualStats.income,
+        expense: individualStats.expense + sharedExpenses,
+        sharedExpenses: sharedExpenses
+    });
 
 }
 

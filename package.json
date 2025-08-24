@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && next build"
+    "vercel-build": "prisma generate && next build",
+    "clear-db": "tsx scripts/clear-database.ts"
   },
   "dependencies": {
     "@clerk/backend": "^2.9.4",
@@ -80,6 +81,7 @@
     "eslint-config-next": "15.4.6",
     "prisma": "^6.14.0",
     "tailwindcss": "^4",
+    "tsx": "^4.20.5",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"
   }
