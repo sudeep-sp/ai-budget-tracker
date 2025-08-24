@@ -26,22 +26,36 @@ import { set, success } from "zod";
 interface Props {
   type: TransactionType;
   onChange: (value: string) => void;
+  onCategoryChange?: (category: { name: string; icon: string }) => void;
 }
 
-function CategoryPicker({ type, onChange }: Props) {
+function CategoryPicker({ type, onChange, onCategoryChange }: Props) {
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState("");
-
-  useEffect(() => {
-    if (!value) return;
-    onChange(value); //when the value changes , call the onChange callback
-  }, [value, onChange]);
 
   const categoriesQuery = useQuery({
     queryKey: ["categories", type],
     queryFn: () =>
       fetch(`/api/categories?type=${type}`).then((res) => res.json()),
   });
+
+  useEffect(() => {
+    if (!value) return;
+    onChange(value); //when the value changes , call the onChange callback
+
+    // Also call onCategoryChange if provided
+    if (onCategoryChange) {
+      const selectedCategory = categoriesQuery.data?.find(
+        (category: Category) => category.name === value
+      );
+      if (selectedCategory) {
+        onCategoryChange({
+          name: selectedCategory.name,
+          icon: selectedCategory.icon,
+        });
+      }
+    }
+  }, [value, onChange, onCategoryChange, categoriesQuery.data]);
 
   const selectedCategory = categoriesQuery.data?.find(
     (category: Category) => category.name === value

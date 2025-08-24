@@ -290,8 +290,9 @@ export default function AddExpensePage({ params }: AddExpensePageProps) {
                                 type="expense"
                                 onChange={(categoryName: string) => {
                                   field.onChange(categoryName);
-                                  // Set a default icon - CategoryPicker will handle the actual icon
-                                  form.setValue("categoryIcon", "💰");
+                                }}
+                                onCategoryChange={(category) => {
+                                  form.setValue("categoryIcon", category.icon);
                                 }}
                               />
                             </FormControl>
