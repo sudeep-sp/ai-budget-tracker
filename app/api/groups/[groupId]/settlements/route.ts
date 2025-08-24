@@ -129,10 +129,10 @@ async function handleNettedSettlement(prisma: any, params: {
         });
 
         // Separate splits by direction
-        const fromUserSplits = allSplits.filter(split =>
+        const fromUserSplits = allSplits.filter((split: any) =>
             split.userId === fromUserId && split.expense.paidBy === toUserId
         );
-        const toUserSplits = allSplits.filter(split =>
+        const toUserSplits = allSplits.filter((split: any) =>
             split.userId === toUserId && split.expense.paidBy === fromUserId
         );
 
@@ -140,7 +140,7 @@ async function handleNettedSettlement(prisma: any, params: {
         let fromUserOwes = 0;
         let toUserOwes = 0;
 
-        fromUserSplits.forEach(split => {
+        fromUserSplits.forEach((split: any) => {
             const totalPaid = split.payments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
             const remainingAmount = Math.max(0, split.amount - totalPaid);
             if (!split.isPaid) {
@@ -148,7 +148,7 @@ async function handleNettedSettlement(prisma: any, params: {
             }
         });
 
-        toUserSplits.forEach(split => {
+        toUserSplits.forEach((split: any) => {
             const totalPaid = split.payments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
             const remainingAmount = Math.max(0, split.amount - totalPaid);
             if (!split.isPaid) {
@@ -161,10 +161,10 @@ async function handleNettedSettlement(prisma: any, params: {
         console.log(`Netted settlement: ${fromUserId} owes ${fromUserOwes}, ${toUserId} owes ${toUserOwes}, net: ${expectedNet}, settling: ${amount}`);
 
         // Create payment records for ALL unpaid splits from both users
-        const paymentPromises = [];
+        const paymentPromises: any[] = [];
 
         // Settle fromUser's debts
-        fromUserSplits.forEach(split => {
+        fromUserSplits.forEach((split: any) => {
             const totalPaid = split.payments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
             const remainingAmount = Math.max(0, split.amount - totalPaid);
             if (remainingAmount > 0 && !split.isPaid) {
@@ -183,7 +183,7 @@ async function handleNettedSettlement(prisma: any, params: {
         });
 
         // Settle toUser's debts
-        toUserSplits.forEach(split => {
+        toUserSplits.forEach((split: any) => {
             const totalPaid = split.payments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
             const remainingAmount = Math.max(0, split.amount - totalPaid);
             if (remainingAmount > 0 && !split.isPaid) {
@@ -204,12 +204,12 @@ async function handleNettedSettlement(prisma: any, params: {
         await Promise.all(paymentPromises);
 
         // Mark all involved splits as paid
-        const splitsToMarkPaid = [...fromUserSplits, ...toUserSplits].filter(split => !split.isPaid);
+        const splitsToMarkPaid = [...fromUserSplits, ...toUserSplits].filter((split: any) => !split.isPaid);
 
         if (splitsToMarkPaid.length > 0) {
             await tx.expenseSplit.updateMany({
                 where: {
-                    id: { in: splitsToMarkPaid.map(s => s.id) },
+                    id: { in: splitsToMarkPaid.map((s: any) => s.id) },
                     isPaid: false,
                 },
                 data: { isPaid: true },
@@ -243,7 +243,7 @@ async function handleRegularSettlement(prisma: any, params: {
     });
 
     await prisma.$transaction(async (tx: any) => {
-        const paymentPromises = splits.map(split => {
+        const paymentPromises = splits.map((split: any) => {
             const totalPaid = split.payments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
             const remainingAmount = Math.max(0, split.amount - totalPaid);
 
@@ -263,7 +263,7 @@ async function handleRegularSettlement(prisma: any, params: {
 
         await Promise.all(paymentPromises);
 
-        const splitsToMarkPaid = splits.filter(split => {
+        const splitsToMarkPaid = splits.filter((split: any) => {
             const totalPaid = split.payments.reduce((sum: number, payment: any) => sum + payment.amount, 0);
             const remainingAmount = Math.max(0, split.amount - totalPaid);
             return remainingAmount > 0;
@@ -272,7 +272,7 @@ async function handleRegularSettlement(prisma: any, params: {
         if (splitsToMarkPaid.length > 0) {
             await tx.expenseSplit.updateMany({
                 where: {
-                    id: { in: splitsToMarkPaid.map(s => s.id) },
+                    id: { in: splitsToMarkPaid.map((s: any) => s.id) },
                     isPaid: false,
                 },
                 data: { isPaid: true },
