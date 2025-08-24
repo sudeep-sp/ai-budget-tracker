@@ -114,15 +114,7 @@ export default function GroupSummaryWidget({
       </Card>
 
       {/* Personal Balance */}
-      <Card
-        className={`border-l-4 ${
-          isSettledUp
-            ? "border-l-green-500"
-            : userOwed > 0
-            ? "border-l-green-500"
-            : "border-l-red-500"
-        }`}
-      >
+      <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             {isSettledUp ? (

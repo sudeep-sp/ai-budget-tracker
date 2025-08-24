@@ -178,7 +178,7 @@ export default function GroupPage({ params }: GroupPageProps) {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-red-500 hover:shadow-sm transition-shadow">
+              <Card className="hover:shadow-sm transition-shadow">
                 <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center gap-2 lg:gap-3">
                     <AlertCircle className="h-4 w-4 lg:h-5 lg:w-5 text-red-500 flex-shrink-0" />
@@ -199,7 +199,7 @@ export default function GroupPage({ params }: GroupPageProps) {
                 </CardContent>
               </Card>
 
-              <Card className="border-l-4 border-l-green-500 hover:shadow-sm transition-shadow">
+              <Card className="hover:shadow-sm transition-shadow">
                 <CardContent className="p-3 sm:p-4 lg:p-6">
                   <div className="flex items-center gap-2 lg:gap-3">
                     <TrendingUp className="h-4 w-4 lg:h-5 lg:w-5 text-green-500 flex-shrink-0" />
