@@ -64,6 +64,7 @@ export interface SettlementSuggestion {
     amount: number;
     reason: string;
     relatedExpenses: string[]; // expense IDs
+    isNetted?: boolean; // true if this is a netted settlement combining multiple expenses
 }
 
 export interface GroupSummary {

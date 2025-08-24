@@ -151,49 +151,191 @@ export function calculateBalances(
 }
 
 /**
- * Generate simple, direct settlement suggestions (person-to-person payments)
+ * Generate expense-based settlement suggestions (direct person-to-person for each expense)
+ * This creates clear, understandable settlements: "Pay X €20 for dinner"
  */
 export function generateSettlementSuggestions(
-    balances: UserBalance[]
+    balances: UserBalance[],
+    expenses?: Array<{
+        id: string;
+        description: string;
+        amount: number;
+        paidBy: string;
+        splits?: Array<{
+            id: string;
+            userId: string;
+            amount: number;
+            isPaid: boolean;
+            payments?: Array<{ amount: number }>;
+        }>;
+    }>
 ): SettlementSuggestion[] {
     const suggestions: SettlementSuggestion[] = [];
 
-    // Find people who owe money (negative balance)
-    const debtors = balances.filter(b => b.netBalance < -0.01);
+    // Create user name map
+    const userNameMap = new Map();
+    balances.forEach(balance => {
+        userNameMap.set(balance.userId, balance.name);
+    });
 
-    // Find people who should receive money (positive balance)
-    const creditors = balances.filter(b => b.netBalance > 0.01);
+    // If we have expense data, use it directly for more accurate settlements
+    if (expenses) {
+        expenses.forEach(expense => {
+            expense.splits?.forEach(split => {
+                // Skip if this person paid for the expense (they don't owe themselves)
+                if (split.userId === expense.paidBy) return;
 
-    // For each person who owes money, create direct payment to the person they owe most to
-    debtors.forEach(debtor => {
-        const amountToPay = Math.abs(debtor.netBalance);
+                // Calculate how much they still owe
+                const totalPaid = split.payments?.reduce((sum, payment) => sum + payment.amount, 0) || 0;
+                const remainingAmount = Math.max(0, split.amount - totalPaid);
 
-        if (amountToPay > 0.01) {
-            // Find the creditor with the highest balance (simplest approach)
-            const primaryCreditor = creditors.reduce((prev, current) =>
-                (prev.netBalance > current.netBalance) ? prev : current
-            );
+                // Only create suggestion if there's still money owed
+                if (remainingAmount > 0.01 && !split.isPaid) {
+                    const payerName = userNameMap.get(expense.paidBy) || 'Unknown';
+                    const debtorName = userNameMap.get(split.userId) || 'Unknown';
 
-            if (primaryCreditor) {
-                // Get unpaid expenses that this debtor is involved in
-                const relatedExpenses = debtor.transactions
-                    .filter(t => !t.isPaid)
-                    .map(t => t.expenseId);
+                    suggestions.push({
+                        fromUserId: split.userId,
+                        toUserId: expense.paidBy,
+                        fromUserName: debtorName,
+                        toUserName: payerName,
+                        amount: Math.round(remainingAmount * 100) / 100,
+                        reason: `For "${expense.description}"`,
+                        relatedExpenses: [expense.id]
+                    });
+                }
+            });
+        });
+    } else {
+        // Fallback to the balance-based approach if no expense data provided
+        balances.forEach(balance => {
+            balance.transactions.forEach(transaction => {
+                if (!transaction.isPaid && transaction.amount > 0.01) {
+                    // Find who paid for this expense
+                    let payeeId = null;
+                    let payeeName = null;
 
-                suggestions.push({
-                    fromUserId: debtor.userId,
-                    toUserId: primaryCreditor.userId,
-                    fromUserName: debtor.name,
-                    toUserName: primaryCreditor.name,
-                    amount: Math.round(amountToPay * 100) / 100,
-                    reason: `Direct payment for shared expenses`,
-                    relatedExpenses: Array.from(new Set(relatedExpenses))
-                });
+                    balances.forEach(otherBalance => {
+                        if (otherBalance.userId !== balance.userId) {
+                            const sameExpenseTransaction = otherBalance.transactions.find(
+                                t => t.expenseId === transaction.expenseId
+                            );
+
+                            if (sameExpenseTransaction && sameExpenseTransaction.isPaid) {
+                                payeeId = otherBalance.userId;
+                                payeeName = otherBalance.name;
+                                return;
+                            }
+                        }
+                    });
+
+                    if (!payeeId) {
+                        const creditors = balances.filter(b => b.netBalance > 0);
+                        for (const creditor of creditors) {
+                            const hasThisExpense = creditor.transactions.some(
+                                t => t.expenseId === transaction.expenseId
+                            );
+                            if (hasThisExpense) {
+                                payeeId = creditor.userId;
+                                payeeName = creditor.name;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (payeeId && payeeName) {
+                        suggestions.push({
+                            fromUserId: balance.userId,
+                            toUserId: payeeId,
+                            fromUserName: balance.name,
+                            toUserName: payeeName,
+                            amount: Math.round(transaction.amount * 100) / 100,
+                            reason: `For "${transaction.description}"`,
+                            relatedExpenses: [transaction.expenseId]
+                        });
+                    }
+                }
+            });
+        });
+    }
+
+    // Remove duplicates first
+    const uniqueSuggestions = suggestions.filter((suggestion, index, self) =>
+        index === self.findIndex(s =>
+            s.fromUserId === suggestion.fromUserId &&
+            s.toUserId === suggestion.toUserId &&
+            s.relatedExpenses[0] === suggestion.relatedExpenses[0]
+        )
+    );
+
+    // Optimize by netting out circular payments between the same two people
+    const optimizedSuggestions = optimizeCircularPayments(uniqueSuggestions);
+
+    return optimizedSuggestions.sort((a, b) => b.amount - a.amount);
+}
+
+/**
+ * Optimize circular payments between the same two people
+ * Example: A owes B €100, B owes A €10 → A owes B €90
+ */
+function optimizeCircularPayments(suggestions: SettlementSuggestion[]): SettlementSuggestion[] {
+    const optimized: SettlementSuggestion[] = [];
+    const processed = new Set<string>();
+
+    suggestions.forEach(suggestion => {
+        const pairKey = `${suggestion.fromUserId}-${suggestion.toUserId}`;
+        const reversePairKey = `${suggestion.toUserId}-${suggestion.fromUserId}`;
+
+        // Skip if we already processed this pair
+        if (processed.has(pairKey) || processed.has(reversePairKey)) {
+            return;
+        }
+
+        // Find the reverse payment (B owes A when we're looking at A owes B)
+        const reversePayment = suggestions.find(s =>
+            s.fromUserId === suggestion.toUserId &&
+            s.toUserId === suggestion.fromUserId
+        );
+
+        if (reversePayment) {
+            // We have circular payments - net them out
+            const netAmount = suggestion.amount - reversePayment.amount;
+
+            if (Math.abs(netAmount) > 0.01) {
+                // Create a single net payment
+                const netSuggestion = netAmount > 0 ? {
+                    fromUserId: suggestion.fromUserId,
+                    toUserId: suggestion.toUserId,
+                    fromUserName: suggestion.fromUserName,
+                    toUserName: suggestion.toUserName,
+                    amount: Math.round(netAmount * 100) / 100,
+                    reason: `Net payment (${suggestion.reason} minus reverse payment)`,
+                    relatedExpenses: [...new Set([...suggestion.relatedExpenses, ...reversePayment.relatedExpenses])],
+                    isNetted: true
+                } : {
+                    fromUserId: reversePayment.fromUserId,
+                    toUserId: reversePayment.toUserId,
+                    fromUserName: reversePayment.fromUserName,
+                    toUserName: reversePayment.toUserName,
+                    amount: Math.round(Math.abs(netAmount) * 100) / 100,
+                    reason: `Net payment (${reversePayment.reason} minus reverse payment)`,
+                    relatedExpenses: [...new Set([...suggestion.relatedExpenses, ...reversePayment.relatedExpenses])],
+                    isNetted: true
+                };
+
+                optimized.push(netSuggestion);
             }
+            // Mark both payments as processed
+            processed.add(pairKey);
+            processed.add(reversePairKey);
+        } else {
+            // No reverse payment, keep the original suggestion
+            optimized.push(suggestion);
+            processed.add(pairKey);
         }
     });
 
-    return suggestions;
+    return optimized;
 }
 
 /**

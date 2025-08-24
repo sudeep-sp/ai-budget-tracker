@@ -52,6 +52,7 @@ export default function SettlementSuggestions({
           toUserId: settlement.toUserId,
           amount: settlement.amount,
           relatedExpenses: settlement.relatedExpenses,
+          isNetted: settlement.isNetted || false,
         }),
       });
 
@@ -95,6 +96,7 @@ export default function SettlementSuggestions({
             toUserId: s.toUserId,
             amount: s.amount,
             relatedExpenses: s.relatedExpenses,
+            isNetted: s.isNetted || false,
           })),
         }),
       });

@@ -68,7 +68,7 @@ export async function GET(
         let balances, settlements;
         try {
             balances = calculateBalances(expenses, payments, members);
-            settlements = generateSettlementSuggestions(balances);
+            settlements = generateSettlementSuggestions(balances, expenses);
 
             console.log("✅ Balance calculation complete:", {
                 balancesCount: balances.length,
