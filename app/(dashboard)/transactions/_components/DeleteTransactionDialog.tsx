@@ -37,12 +37,13 @@ function DeleteTransactionDialog({ open, setOpen, transactionId }: Props) {
         queryKey: ["transactions"],
       });
     },
-    onError: () => {
-      toast.error("Failed to delete category", {
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to delete transaction", {
         id: transactionId,
       });
     },
   });
+
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogContent>

@@ -55,7 +55,7 @@ async function getTransactionsHistory(userId: string, from: Date, to: Date) {
         }
     })
 
-    // Get shared expenses where user is a member
+    // Get shared expenses where user is a member (only from active groups)
     const userGroups = await prisma.groupMember.findMany({
         where: {
             userId,
@@ -84,31 +84,34 @@ async function getTransactionsHistory(userId: string, from: Date, to: Date) {
         }
     });
 
-    // Convert shared expenses to transaction format
+    // Convert shared expenses to transaction format (only from active groups)
     const sharedTransactions: any[] = [];
 
     userGroups.forEach((groupMember: any) => {
-        groupMember.group.expenses.forEach((expense: any) => {
-            const userSplit = expense.splits.find((split: any) => split.userId === userId);
-            if (userSplit) {
-                sharedTransactions.push({
-                    id: `shared-${expense.id}-${userSplit.id}`,
-                    createdAt: expense.createdAt,
-                    updatedAt: expense.updatedAt,
-                    amount: userSplit.amount,
-                    description: `${expense.description} (Shared - ${groupMember.group.name})`,
-                    date: expense.date,
-                    userId: userId,
-                    type: "expense",
-                    category: expense.category,
-                    categoryIcon: expense.categoryIcon,
-                    groupId: expense.groupId,
-                    isShared: true,
-                    groupName: groupMember.group.name,
-                    originalExpenseId: expense.id
-                });
-            }
-        });
+        // Only process expenses from active groups
+        if (groupMember.group.isActive) {
+            groupMember.group.expenses.forEach((expense: any) => {
+                const userSplit = expense.splits.find((split: any) => split.userId === userId);
+                if (userSplit) {
+                    sharedTransactions.push({
+                        id: `shared-${expense.id}-${userSplit.id}`,
+                        createdAt: expense.createdAt,
+                        updatedAt: expense.updatedAt,
+                        amount: userSplit.amount,
+                        description: `${expense.description} (Shared - ${groupMember.group.name})`,
+                        date: expense.date,
+                        userId: userId,
+                        type: "expense",
+                        category: expense.category,
+                        categoryIcon: expense.categoryIcon,
+                        groupId: expense.groupId,
+                        isShared: true,
+                        groupName: groupMember.group.name,
+                        originalExpenseId: expense.id
+                    });
+                }
+            });
+        }
     });
 
     // Combine and sort all transactions

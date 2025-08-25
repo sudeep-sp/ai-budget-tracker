@@ -23,7 +23,6 @@ export async function DeleteTransaction(id: string) {
     }
 
     await prisma.$transaction([
-
         prisma.transaction.delete({
             where: {
                 id,
