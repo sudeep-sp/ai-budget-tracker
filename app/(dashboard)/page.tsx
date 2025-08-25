@@ -31,7 +31,7 @@ async function page() {
               Hello, {user.firstName}! 👋
             </p>
             <p className="text-muted-foreground mt-1 md:mt-2 text-sm md:text-base">
-              Welcome to Fynixs
+              Welcome to Budgetly
             </p>
           </div>
 
