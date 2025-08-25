@@ -16,8 +16,48 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fynixs",
-  description: "Your personal finance management solution",
+  title: "Fynixs - AI-Powered Budget Tracker & Personal Finance Manager",
+  description:
+    "Take control of your finances with Fynixs. Track expenses, manage budgets, and get AI-powered insights for better financial decisions. Your personal finance management solution.",
+  keywords:
+    "budget tracker, personal finance, expense tracking, financial management, AI budget, money management",
+  authors: [{ name: "Fynixs Team" }],
+  creator: "Fynixs Team",
+  publisher: "Fynixs",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: "Fynixs - AI-Powered Budget Tracker",
+    description:
+      "Take control of your finances with Fynixs. Track expenses, manage budgets, and get AI-powered insights.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Fynixs",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Fynixs - AI-Powered Budget Tracker",
+    description:
+      "Take control of your finances with Fynixs. Track expenses, manage budgets, and get AI-powered insights.",
+    creator: "@fynixs",
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
+  verification: {
+    google: "your-google-verification-code", // Replace with actual verification code
+  },
 };
 
 export default function RootLayout({
