@@ -62,7 +62,7 @@ export async function POST(
 ) {
     const user = await currentUser();
     if (!user) {
-        redirect("/sign-in");
+        return Response.json({ error: "Authentication required" }, { status: 401 });
     }
 
     const { token } = await params;

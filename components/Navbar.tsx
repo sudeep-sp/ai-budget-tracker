@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "./ui/button";
 import { UserButton } from "@clerk/nextjs";
 import { ThemeSwitcherBtn } from "./ThemeSwitcherBtn";
+import NotificationButton from "./NotificationButton";
 import {
   Sheet,
   SheetContent,
@@ -51,6 +52,7 @@ function DesktopNavbar() {
         </div>
         <div className="flex items-center gap-3">
           <ThemeSwitcherBtn />
+          <NotificationButton />
           <UserButton afterSwitchSessionUrl="/sign-in" />
         </div>
       </nav>
@@ -94,6 +96,7 @@ function MobileNavbar() {
         </div>
         <div className="flex items-center gap-3">
           <ThemeSwitcherBtn />
+          <NotificationButton />
           <UserButton afterSwitchSessionUrl="/sign-in" />
         </div>
       </nav>

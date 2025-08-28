@@ -176,12 +176,28 @@ export async function POST(
             },
         });
 
-        // Here you would typically send an email invitation
-        // For now, we'll just return the invitation with token
+        // Create in-app notification for the invited user
+        await prisma.notification.create({
+            data: {
+                userId: targetUser.id,
+                type: "group_invitation",
+                title: "Group Invitation",
+                message: `${user.firstName || user.emailAddresses[0]?.emailAddress || "Someone"} invited you to join "${invitation.group.name}" expense group.`,
+                data: JSON.stringify({
+                    groupId,
+                    groupName: invitation.group.name,
+                    invitedBy: user.id,
+                    inviterName: user.firstName || user.emailAddresses[0]?.emailAddress || "Someone",
+                    token,
+                    role,
+                }),
+                expiresAt: expiresAt,
+            },
+        });
+
         return Response.json({
             invitation,
-            invitationLink: `/invite/${token}`,
-            message: "Invitation created successfully",
+            message: `Invitation sent directly to ${email}'s account. They will receive an in-app notification.`,
         }, { status: 201 });
 
     } catch (error) {

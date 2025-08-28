@@ -90,10 +90,32 @@ export async function POST(
             )
         );
 
-        // TODO: Implement actual reminder notifications:
+        // Create in-app notifications for reminder recipients
+        await Promise.all(
+            splitsToRemind.map(split => {
+                const member = members.find(m => m.userId === split.userId);
+                return prisma.notification.create({
+                    data: {
+                        userId: split.userId,
+                        type: "payment_reminder",
+                        title: "Payment Reminder",
+                        message: `${member?.name || "Someone"} sent you a payment reminder for "${expense.description}". You owe $${split.amount.toFixed(2)}.`,
+                        data: JSON.stringify({
+                            expenseId,
+                            splitId: split.id,
+                            groupId,
+                            amount: split.amount,
+                            description: expense.description,
+                        }),
+                        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Expire in 30 days
+                    },
+                });
+            })
+        );
+
+        // TODO: Implement additional reminder notifications:
         // - Email notifications
-        // - Push notifications
-        // - In-app notifications
+        // - Push notifications  
         // - SMS reminders
 
         return Response.json({

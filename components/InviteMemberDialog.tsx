@@ -61,16 +61,11 @@ export default function InviteMemberDialog({
       return response.json();
     },
     onSuccess: (data) => {
-      const inviteLink = `${window.location.origin}/invite/${data.invitation.token}`;
-
-      // Copy invitation link to clipboard
-      navigator.clipboard.writeText(inviteLink);
-
       toast.success(
         <div>
-          <p className="font-semibold">✅ Invitation created!</p>
+          <p className="font-semibold">✅ Invitation sent!</p>
           <p className="text-sm">
-            Link copied to clipboard - share it with {inviteEmail}
+            {inviteEmail} will receive a notification in their account
           </p>
         </div>,
         { duration: 5000 }
@@ -89,13 +84,6 @@ export default function InviteMemberDialog({
       queryClient.invalidateQueries({
         queryKey: ["expense-group", groupId],
       });
-
-      // Show the link in an alert for manual sharing
-      setTimeout(() => {
-        alert(
-          `Share this invitation link with ${data.invitation.email}:\n\n${inviteLink}\n\nThey must be signed in to accept the invitation.`
-        );
-      }, 500);
     },
     onError: (error) => {
       toast.error(error.message || "Failed to send invitation");
@@ -137,9 +125,9 @@ export default function InviteMemberDialog({
             <li>
               The person must already have an account (sign up at /sign-up)
             </li>
-            <li>We&apos;ll create an invitation link for you to share</li>
-            <li>Send them the link via email, text, or any messaging app</li>
-            <li>They click the link while signed in to accept</li>
+            <li>We&apos;ll send the invitation directly to their account</li>
+            <li>They&apos;ll receive a notification when they sign in</li>
+            <li>They can accept or decline the invitation from their notifications</li>
           </ol>
         </div>
         <div className="space-y-4">
@@ -184,7 +172,7 @@ export default function InviteMemberDialog({
             className="w-full"
             size="sm"
           >
-            {isInviting ? "Creating Link..." : "Create Invitation Link"}
+            {isInviting ? "Sending Invitation..." : "Send Invitation"}
           </Button>
         </DialogFooter>
       </DialogContent>
