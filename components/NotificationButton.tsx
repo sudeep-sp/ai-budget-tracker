@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Bell, Check, Clock, Users, X } from "lucide-react";
+import { Bell, Check, Clock, Users, X, Trash2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -84,6 +84,38 @@ export default function NotificationButton() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       toast.success("All notifications marked as read");
+    },
+  });
+
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const response = await fetch(`/api/notifications/${notificationId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete notification");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("Notification deleted");
+    },
+  });
+
+  const deleteAllNotificationsMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/notifications/delete-all", {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete all notifications");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      toast.success("All notifications deleted");
     },
   });
 
@@ -176,17 +208,31 @@ export default function NotificationButton() {
       <DropdownMenuContent align="end" className="w-80">
         <div className="flex items-center justify-between p-2">
           <DropdownMenuLabel className="p-0">Notifications</DropdownMenuLabel>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markAllAsReadMutation.mutate()}
-              disabled={markAllAsReadMutation.isPending}
-              className="h-6 text-xs"
-            >
-              Mark all read
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllAsReadMutation.mutate()}
+                disabled={markAllAsReadMutation.isPending}
+                className="h-6 text-xs"
+              >
+                Mark all read
+              </Button>
+            )}
+            {notifications.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => deleteAllNotificationsMutation.mutate()}
+                disabled={deleteAllNotificationsMutation.isPending}
+                className="h-6 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="h-3 w-3 mr-1" />
+                Delete all
+              </Button>
+            )}
+          </div>
         </div>
         <DropdownMenuSeparator />
         
@@ -209,11 +255,25 @@ export default function NotificationButton() {
                   <div className="flex items-start gap-2">
                     {getNotificationIcon(notification.type)}
                     <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-medium">{notification.title}</h4>
-                        {!notification.isRead && (
-                          <div className="h-2 w-2 bg-blue-500 rounded-full" />
-                        )}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-medium">{notification.title}</h4>
+                          {!notification.isRead && (
+                            <div className="h-2 w-2 bg-blue-500 rounded-full" />
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNotificationMutation.mutate(notification.id);
+                          }}
+                          disabled={deleteNotificationMutation.isPending}
+                          className="h-6 w-6 p-0 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">{notification.message}</p>
                       <p className="text-xs text-muted-foreground">

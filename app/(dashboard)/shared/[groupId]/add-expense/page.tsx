@@ -5,7 +5,7 @@ import { use } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Loader2, ArrowLeft, DollarSign, Users, Calendar } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -64,6 +64,7 @@ interface AddExpensePageProps {
 export default function AddExpensePage({ params }: AddExpensePageProps) {
   const { groupId } = use(params);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [splitType, setSplitType] = useState<
     "equal" | "percentage" | "custom" | "shares"
   >("equal");
@@ -106,6 +107,10 @@ export default function AddExpensePage({ params }: AddExpensePageProps) {
     },
     onSuccess: () => {
       toast.success("Expense added successfully! 🎉");
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({ queryKey: ["expense-group", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["group-balances", groupId] });
+      queryClient.invalidateQueries({ queryKey: ["expense-groups"] });
       router.push(`/shared/${groupId}`);
     },
     onError: (error) => {
