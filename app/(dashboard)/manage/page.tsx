@@ -1,6 +1,8 @@
 "use client";
 
 import { CurrencyComboBox } from "@/components/CurrencyComboBox";
+import { BudgetInput } from "@/components/BudgetInput";
+import { SavingsGoalInput } from "@/components/SavingsGoalInput";
 import SkeletonWrapper from "@/components/SkeletonWrapper";
 import {
   Card,
@@ -16,6 +18,8 @@ import {
   TrashIcon,
   TrendingDownIcon,
   TrendingUpIcon,
+  Wallet,
+  Target,
 } from "lucide-react";
 import React from "react";
 import CreateCategoryDialog from "../_components/CreateCategoryDialog";
@@ -49,6 +53,36 @@ function page() {
           </CardHeader>
           <CardContent>
             <CurrencyComboBox />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <Wallet className="h-5 w-5" />
+              Monthly Budget
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Set your monthly spending budget
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <BudgetInput />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <Target className="h-5 w-5" />
+              Savings Goal
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Set your monthly savings goal
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SavingsGoalInput />
           </CardContent>
         </Card>
 

@@ -12,6 +12,8 @@ datasource db {
 model UserSettings {
   userId         String  @id
   currency       String
+  monthlyBudget  Float?
+  savingsGoal    Float?
   defaultGroupId String?
 }
 

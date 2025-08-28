@@ -10,3 +10,11 @@ export const UpdateUserCurrencySchema = z.object({
         return value;
     })
 });
+
+export const UpdateUserBudgetSchema = z.object({
+    monthlyBudget: z.number().min(0, "Budget must be positive").optional()
+});
+
+export const UpdateUserSavingsGoalSchema = z.object({
+    savingsGoal: z.number().min(0, "Savings goal must be positive").optional()
+});

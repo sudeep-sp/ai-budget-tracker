@@ -13,8 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Logo from "@/components/Logo";
-import { Currency } from "lucide-react";
+import { Currency, Target, Wallet } from "lucide-react";
 import { CurrencyComboBox } from "@/components/CurrencyComboBox";
+import { BudgetInput } from "@/components/BudgetInput";
+import { SavingsGoalInput } from "@/components/SavingsGoalInput";
 
 async function page() {
   const user = await currentUser();
@@ -28,7 +30,7 @@ async function page() {
           Welcome, <span className="ml-2 font-bold">{user.firstName}! 👋</span>!
         </h1>
         <h2 className="text-center text-sm sm:text-base text-muted-foreground px-2">
-          Let &apos;s get started by setting up your currency.
+          Let &apos;s get started by setting up your preferences.
         </h2>
 
         <h3 className="text-center text-xs sm:text-sm text-muted-foreground px-2">
@@ -38,13 +40,46 @@ async function page() {
       <Separator className="my-6" />
       <Card className="w-full mx-4 sm:mx-0">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg sm:text-xl">Currency</CardTitle>
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Currency className="h-5 w-5" />
+            Currency
+          </CardTitle>
           <CardDescription className="text-sm">
             Set your default currency for transactions
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-2">
           <CurrencyComboBox />
+        </CardContent>
+      </Card>
+      
+      <Card className="w-full mx-4 sm:mx-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Wallet className="h-5 w-5" />
+            Monthly Budget
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Set your monthly spending budget (optional)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <BudgetInput />
+        </CardContent>
+      </Card>
+
+      <Card className="w-full mx-4 sm:mx-0">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <Target className="h-5 w-5" />
+            Savings Goal
+          </CardTitle>
+          <CardDescription className="text-sm">
+            Set your monthly savings goal (optional)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-2">
+          <SavingsGoalInput />
         </CardContent>
       </Card>
       <Separator className="my-6" />
