@@ -1,7 +1,7 @@
 import prisma from "./prisma";
 import { GroupMember } from "./generated/prisma";
 
-export interface UserMembershipInfo extends GroupMember {
+export interface UserMembershipInfo extends Omit<GroupMember, 'permissions'> {
   permissions: string[];
 }
 

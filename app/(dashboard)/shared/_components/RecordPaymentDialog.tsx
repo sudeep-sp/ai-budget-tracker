@@ -160,7 +160,7 @@ export default function RecordPaymentDialog({
             Record Payment
           </DialogTitle>
           <DialogDescription className="text-sm">
-            Record a payment for "{split.expense.description}"
+            Record a payment for &ldquo;{split.expense.description}&rdquo;
           </DialogDescription>
         </DialogHeader>
 

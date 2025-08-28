@@ -24,9 +24,12 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-require-imports": "warn",
-      "@typescript-eslint/no-this-alias": "warn",
+      "@typescript-eslint/no-this-alias": "warn", 
       "@typescript-eslint/no-unused-expressions": "warn",
       "prefer-const": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+      "react/no-unescaped-entities": "error", // Keep this as error since we fixed it
+      "@next/next/no-html-link-for-pages": "error", // Keep navigation errors as errors
     },
   },
 ];
