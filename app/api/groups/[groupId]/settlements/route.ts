@@ -158,7 +158,7 @@ async function handleNettedSettlement(prisma: any, params: {
 
         // The netted amount should match what we're settling
         const expectedNet = fromUserOwes - toUserOwes;
-        console.log(`Netted settlement: ${fromUserId} owes ${fromUserOwes}, ${toUserId} owes ${toUserOwes}, net: ${expectedNet}, settling: ${amount}`);
+        // Log settlement details for debugging (removed console.log for production)
 
         // Create payment records for ALL unpaid splits from both users
         const paymentPromises: any[] = [];

@@ -3,7 +3,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { CreateSharedExpenseSchema, validateSplits } from "@/schema/shared-expenses";
-import { calculateSplits, hasPermission } from "@/lib/shared-utils";
+import { calculateSplits } from "@/lib/shared-utils";
+import { verifyGroupAccess, verifyPermission } from "@/lib/group-utils";
 
 export const runtime = 'nodejs';
 
@@ -24,17 +25,7 @@ export async function GET(
 
     try {
         // Verify user is member of group
-        const userMember = await prisma.groupMember.findFirst({
-            where: {
-                groupId,
-                userId: user.id,
-                isActive: true,
-            },
-        });
-
-        if (!userMember) {
-            return Response.json({ error: "Not a member of this group" }, { status: 403 });
-        }
+        await verifyGroupAccess(groupId, user.id);
 
         const expenses = await prisma.sharedExpense.findMany({
             where: { groupId },
@@ -109,22 +100,7 @@ export async function POST(
         const { amount, description, category, categoryIcon, date, paidBy, splitType, splits, isRecurring, recurringConfig } = parsedBody.data;
 
         // Verify user has permission to add expenses
-        const userMember = await prisma.groupMember.findFirst({
-            where: {
-                groupId,
-                userId: user.id,
-                isActive: true,
-            },
-        });
-
-        if (!userMember) {
-            return Response.json({ error: "Not a member of this group" }, { status: 403 });
-        }
-
-        const permissions = JSON.parse(userMember.permissions || "[]");
-        if (!hasPermission(userMember.role, permissions, "write_transactions")) {
-            return Response.json({ error: "Insufficient permissions" }, { status: 403 });
-        }
+        await verifyPermission(groupId, user.id, "write_transactions");
 
         // Validate splits
         validateSplits(splitType, splits, amount);

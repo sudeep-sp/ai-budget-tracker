@@ -4,9 +4,10 @@ import { PrismaPlugin } from "@prisma/nextjs-monorepo-workaround-plugin";
 
 const nextConfig: NextConfig = {
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false, // We fixed the critical errors, warnings are acceptable
+  },
+  typescript: {
+    ignoreBuildErrors: false, // Keep TypeScript checks enabled
   },
   webpack: (config, { isServer }) => {
     if (isServer) {

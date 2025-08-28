@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { calculateBalances, generateSettlementSuggestions } from "@/lib/shared-utils";
+import { verifyGroupAccess } from "@/lib/group-utils";
 
 export const runtime = 'nodejs';
 
@@ -20,17 +21,7 @@ export async function GET(
 
     try {
         // Verify user is member of group
-        const userMember = await prisma.groupMember.findFirst({
-            where: {
-                groupId,
-                userId: user.id,
-                isActive: true,
-            },
-        });
-
-        if (!userMember) {
-            return Response.json({ error: "Not a member of this group" }, { status: 403 });
-        }
+        await verifyGroupAccess(groupId, user.id);
 
         // Get all expenses and their splits with payments
         const expenses = await prisma.sharedExpense.findMany({
@@ -70,11 +61,7 @@ export async function GET(
             balances = calculateBalances(expenses, payments, members);
             settlements = generateSettlementSuggestions(balances, expenses);
 
-            console.log("✅ Balance calculation complete:", {
-                balancesCount: balances.length,
-                paymentsCount: payments.length,
-                userBalance: balances.find(b => b.userId === user.id)?.netBalance
-            });
+            // Balance calculation complete - removed console.log for production
         } catch (error) {
             console.error("Error in balance calculation:", error);
             return Response.json({ error: "Failed to calculate balances" }, { status: 500 });
