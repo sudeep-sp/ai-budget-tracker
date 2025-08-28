@@ -54,9 +54,17 @@ export async function POST(
         let splitsToRemind = expense.splits;
         if (reminderType === "unpaid") {
             splitsToRemind = expense.splits.filter(split => {
+                // Don't send reminder to the person sending the reminder
+                if (split.userId === user.id) {
+                    return false;
+                }
+                
                 const totalPaid = split.payments.reduce((sum, payment) => sum + payment.amount, 0);
                 return totalPaid < split.amount;
             });
+        } else {
+            // For "all" reminders, also exclude the sender
+            splitsToRemind = expense.splits.filter(split => split.userId !== user.id);
         }
 
         // Get member details for reminder recipients
