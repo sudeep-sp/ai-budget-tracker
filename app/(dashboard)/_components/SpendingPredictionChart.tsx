@@ -128,8 +128,8 @@ export function SpendingPredictionChart({
   console.log("Daily budget:", dailyBudget);
   console.log("Using fallback data:", data.length === 0);
   console.log("Chart data ranges:", {
-    minActual: Math.min(...chartData.map(d => d.cumulativeActual)),
-    maxActual: Math.max(...chartData.map(d => d.cumulativeActual)),
+    minActual: Math.min(...chartData.map(d => d.cumulativeActual).filter((val): val is number => val !== null)),
+    maxActual: Math.max(...chartData.map(d => d.cumulativeActual).filter((val): val is number => val !== null)),
     minPlanned: Math.min(...chartData.map(d => d.cumulativePlanned)),
     maxPlanned: Math.max(...chartData.map(d => d.cumulativePlanned))
   });
