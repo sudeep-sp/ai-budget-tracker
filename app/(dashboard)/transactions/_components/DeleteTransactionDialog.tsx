@@ -36,6 +36,15 @@ function DeleteTransactionDialog({ open, setOpen, transactionId }: Props) {
       await queryClient.invalidateQueries({
         queryKey: ["transactions"],
       });
+
+      // Also invalidate overview and spending prediction queries to refresh all dashboard components
+      await queryClient.invalidateQueries({
+        queryKey: ["overview"],
+      });
+      
+      await queryClient.invalidateQueries({
+        queryKey: ["spending"],
+      });
     },
     onError: (error: any) => {
       toast.error(error.message || "Failed to delete transaction", {

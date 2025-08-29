@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import React from "react";
 import CreateTransactionDialog from "./_components/CreateTransactionDialog";
 import Overview from "./_components/Overview";
+import SpendingPredictionWrapper from "./_components/SpendingPredictionWrapper";
 import History from "./_components/History";
 
 async function page() {
@@ -23,7 +24,7 @@ async function page() {
   }
 
   return (
-    <div className="h-full bg-background">
+    <div className="h-full bg-background pb-8 md:pb-12">
       <div className="border-b bg-card">
         <div className="container mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 md:gap-6 py-6 md:py-8 px-4 md:px-6 lg:px-8">
           <div>
@@ -63,6 +64,9 @@ async function page() {
         </div>
       </div>
       <Overview userSettings={userSettings} />
+      <div className="container mx-auto px-4 mt-8 md:mt-12">
+        <SpendingPredictionWrapper userSettings={userSettings} />
+      </div>
       <History userSettings={userSettings} />
     </div>
   );

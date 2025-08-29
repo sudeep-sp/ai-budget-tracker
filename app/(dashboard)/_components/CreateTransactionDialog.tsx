@@ -94,6 +94,11 @@ function CreateTransactionDialog({ trigger, type }: Props) {
         queryKey: ["overview"],
       });
 
+      // Also invalidate spending prediction queries to refresh the spending vs plan chart
+      queryClient.invalidateQueries({
+        queryKey: ["spending"],
+      });
+
       setOpen((prev) => !prev);
     },
   });
